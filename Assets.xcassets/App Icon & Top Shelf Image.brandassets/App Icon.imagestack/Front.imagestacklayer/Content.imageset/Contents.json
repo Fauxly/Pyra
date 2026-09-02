@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "atlas400x240.png",
+      "filename" : "pyra.png",
       "idiom" : "tv",
       "scale" : "1x"
     },
     {
-      "filename" : "atlas800x480.png",
+      "filename" : "pyra 1.png",
       "idiom" : "tv",
       "scale" : "2x"
     }
