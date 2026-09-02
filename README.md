@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="images/logo.png" width="280" alt="Atlas logo" />
+  <img src="images/logo.png" width="280" alt="Pyra logo" />
 </p>
 
-<h1 align="center">Atlas</h1>
+<h1 align="center">Pyra</h1>
 
 <p align="center">
   <b>A native package manager for jailbroken Apple TV</b><br>
@@ -22,7 +22,7 @@
 
 There's no proper on-TV package manager for palera1n on Apple TV. The recommended workflow is `apt` over SSH, or PurePKG's tvOS build. Both work — but neither was *designed* for a TV remote.
 
-**Atlas** is built from scratch for the big screen: focus-driven navigation, horizontal repo browsing à la App Store, and full tweak management without ever touching a terminal.
+**Pyra** is built from scratch for the big screen: focus-driven navigation, horizontal repo browsing à la App Store, and full tweak management without ever touching a terminal.
 
 ---
 
@@ -60,7 +60,7 @@ Add this source in PurePKG or any APT-compatible manager:
 https://fauxly.github.io/
 ```
 
-Then install Atlas from the package list.
+Then install Pyra from the package list.
 
 </details>
 
@@ -79,7 +79,7 @@ dpkg -i com.fixstricks.atlas_*.deb
 <details>
 <summary><b>Option 3 — palera1n loader</b></summary>
 
-Atlas ships a [`loader.json`](loader.json) config. Point the palera1n loader app at this file's raw URL to get Atlas as an install option during bootstrap — works alongside PurePKG.
+Pyra ships a [`loader.json`](loader.json) config. Point the palera1n loader app at this file's raw URL to get Pyra as an install option during bootstrap — works alongside PurePKG.
 
 </details>
 
@@ -89,11 +89,11 @@ Atlas ships a [`loader.json`](loader.json) config. Point the palera1n loader app
 
 A few things that came up while building this — might be useful if you're working on tvOS jailbreak tooling:
 
-**Privilege escalation** — rootful palera1n mounts the root filesystem `nosuid`, breaking classic `su` / `tsu`. Atlas uses the persona-based `posix_spawn` API (`posix_spawnattr_set_persona_np` + friends) — the same approach [PurePKG](https://github.com/Lrdsnow/PurePKG) uses.
+**Privilege escalation** — rootful palera1n mounts the root filesystem `nosuid`, breaking classic `su` / `tsu`. Pyra uses the persona-based `posix_spawn` API (`posix_spawnattr_set_persona_np` + friends) — the same approach [PurePKG](https://github.com/Lrdsnow/PurePKG) uses.
 
 **Custom tab bar** — `UITabBarController` on tvOS doesn't let you insert arbitrary elements (like a persistent back button) into its bar. The entire navigation shell is a hand-built `UIViewController` container.
 
-**Repo format detection** — Atlas tries the standard nested layout first (`dists/{dist}/{comp}/binary-{arch}/Packages`), then falls back to flat (`Packages` at repo root). No user configuration needed.
+**Repo format detection** — Pyra tries the standard nested layout first (`dists/{dist}/{comp}/binary-{arch}/Packages`), then falls back to flat (`Packages` at repo root). No user configuration needed.
 
 **Text input** — `UIAlertController` + `addTextField()` reliably hangs when the on-screen keyboard appears on this setup. A plain `UITextField` on a regular screen avoids the issue and supports "type from nearby iPhone" out of the box.
 

@@ -2,7 +2,7 @@
     "min_loader_version": "2.1",
     "palera1n_version_with_min_loader": "2.0",
     "min_bridge_bootstrapper_version": "1.0",
-    "footer_notice": "Custom config with Atlas package manager added for tvOS — report Atlas issues at https://github.com/Fauxly/Atlas/issues",
+    "footer_notice": "Custom config with Pyra package manager added for tvOS — report Pyra issues at https://github.com/Fauxly/Pyra/issues",
     "contents": [
         {
             "platform": 2,
@@ -238,10 +238,10 @@
                         "filePath": "/Applications/PurePKG.app"
                     },
                     {
-                        "name": "Atlas",
-                        "uri": "https://github.com/Fauxly/Atlas/releases/latest/download/com.fauxly.atlas_appletvos-arm64.deb",
-                        "icon": "https://raw.githubusercontent.com/Fauxly/Atlas/main/icon.png",
-                        "filePath": "/Applications/Atlas.app"
+                        "name": "Pyra",
+                        "uri": "https://github.com/Fauxly/Pyra/releases/latest/download/com.fauxly.pyra_appletvos-arm64.deb",
+                        "icon": "https://raw.githubusercontent.com/Fauxly/Pyra/main/icon.png",
+                        "filePath": "/Applications/Pyra.app"
                     }
                 ],
                 "repositories": [

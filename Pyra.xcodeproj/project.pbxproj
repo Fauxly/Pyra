@@ -1,0 +1,606 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		18A1D3B630020995009B0045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A1D3B530020995009B0045 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		184929292FFB9BFD00F28DF0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 184929102FFB9BFB00F28DF0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 184929172FFB9BFB00F28DF0;
+			remoteInfo = Pyra;
+		};
+		184929332FFB9BFE00F28DF0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 184929102FFB9BFB00F28DF0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 184929172FFB9BFB00F28DF0;
+			remoteInfo = Pyra;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		184929182FFB9BFB00F28DF0 /* Pyra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pyra.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		184929282FFB9BFD00F28DF0 /* PyraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PyraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		184929322FFB9BFE00F28DF0 /* PyraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PyraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		18A1D3B530020995009B0045 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		18E592422FFD821700493B98 /* Exceptions for "Pyra" folder in "Pyra" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 184929172FFB9BFB00F28DF0 /* Pyra */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1849291A2FFB9BFB00F28DF0 /* Pyra */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				18E592422FFD821700493B98 /* Exceptions for "Pyra" folder in "Pyra" target */,
+			);
+			path = Pyra;
+			sourceTree = "<group>";
+		};
+		1849292B2FFB9BFD00F28DF0 /* PyraTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PyraTests;
+			sourceTree = "<group>";
+		};
+		184929352FFB9BFE00F28DF0 /* PyraUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PyraUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		184929152FFB9BFB00F28DF0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		184929252FFB9BFD00F28DF0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1849292F2FFB9BFE00F28DF0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1849290F2FFB9BFB00F28DF0 = {
+			isa = PBXGroup;
+			children = (
+				18A1D3B930020B06009B0045 /* Preview Content */,
+				18A1D3B530020995009B0045 /* Assets.xcassets */,
+				1849291A2FFB9BFB00F28DF0 /* Pyra */,
+				1849292B2FFB9BFD00F28DF0 /* PyraTests */,
+				184929352FFB9BFE00F28DF0 /* PyraUITests */,
+				184929192FFB9BFB00F28DF0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		184929192FFB9BFB00F28DF0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				184929182FFB9BFB00F28DF0 /* Pyra.app */,
+				184929282FFB9BFD00F28DF0 /* PyraTests.xctest */,
+				184929322FFB9BFE00F28DF0 /* PyraUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		18A1D3B930020B06009B0045 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		184929172FFB9BFB00F28DF0 /* Pyra */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1849293C2FFB9BFE00F28DF0 /* Build configuration list for PBXNativeTarget "Pyra" */;
+			buildPhases = (
+				184929142FFB9BFB00F28DF0 /* Sources */,
+				184929152FFB9BFB00F28DF0 /* Frameworks */,
+				184929162FFB9BFB00F28DF0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1849291A2FFB9BFB00F28DF0 /* Pyra */,
+			);
+			name = Pyra;
+			packageProductDependencies = (
+			);
+			productName = Pyra;
+			productReference = 184929182FFB9BFB00F28DF0 /* Pyra.app */;
+			productType = "com.apple.product-type.application";
+		};
+		184929272FFB9BFD00F28DF0 /* PyraTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1849293F2FFB9BFE00F28DF0 /* Build configuration list for PBXNativeTarget "PyraTests" */;
+			buildPhases = (
+				184929242FFB9BFD00F28DF0 /* Sources */,
+				184929252FFB9BFD00F28DF0 /* Frameworks */,
+				184929262FFB9BFD00F28DF0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1849292A2FFB9BFD00F28DF0 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1849292B2FFB9BFD00F28DF0 /* PyraTests */,
+			);
+			name = PyraTests;
+			packageProductDependencies = (
+			);
+			productName = PyraTests;
+			productReference = 184929282FFB9BFD00F28DF0 /* PyraTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		184929312FFB9BFE00F28DF0 /* PyraUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 184929422FFB9BFE00F28DF0 /* Build configuration list for PBXNativeTarget "PyraUITests" */;
+			buildPhases = (
+				1849292E2FFB9BFE00F28DF0 /* Sources */,
+				1849292F2FFB9BFE00F28DF0 /* Frameworks */,
+				184929302FFB9BFE00F28DF0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				184929342FFB9BFE00F28DF0 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				184929352FFB9BFE00F28DF0 /* PyraUITests */,
+			);
+			name = PyraUITests;
+			packageProductDependencies = (
+			);
+			productName = PyraUITests;
+			productReference = 184929322FFB9BFE00F28DF0 /* PyraUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		184929102FFB9BFB00F28DF0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					184929172FFB9BFB00F28DF0 = {
+						CreatedOnToolsVersion = 16.2;
+						LastSwiftMigration = 1620;
+					};
+					184929272FFB9BFD00F28DF0 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 184929172FFB9BFB00F28DF0;
+					};
+					184929312FFB9BFE00F28DF0 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 184929172FFB9BFB00F28DF0;
+					};
+				};
+			};
+			buildConfigurationList = 184929132FFB9BFB00F28DF0 /* Build configuration list for PBXProject "Pyra" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				ru,
+			);
+			mainGroup = 1849290F2FFB9BFB00F28DF0;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 184929192FFB9BFB00F28DF0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				184929172FFB9BFB00F28DF0 /* Pyra */,
+				184929272FFB9BFD00F28DF0 /* PyraTests */,
+				184929312FFB9BFE00F28DF0 /* PyraUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		184929162FFB9BFB00F28DF0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				18A1D3B630020995009B0045 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		184929262FFB9BFD00F28DF0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		184929302FFB9BFE00F28DF0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		184929142FFB9BFB00F28DF0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		184929242FFB9BFD00F28DF0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1849292E2FFB9BFE00F28DF0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1849292A2FFB9BFD00F28DF0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 184929172FFB9BFB00F28DF0 /* Pyra */;
+			targetProxy = 184929292FFB9BFD00F28DF0 /* PBXContainerItemProxy */;
+		};
+		184929342FFB9BFE00F28DF0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 184929172FFB9BFB00F28DF0 /* Pyra */;
+			targetProxy = 184929332FFB9BFE00F28DF0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1849293A2FFB9BFE00F28DF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = appletvos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TVOS_DEPLOYMENT_TARGET = 15.6;
+			};
+			name = Debug;
+		};
+		1849293B2FFB9BFE00F28DF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = appletvos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				TVOS_DEPLOYMENT_TARGET = 15.6;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1849293D2FFB9BFE00F28DF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_ASSET_PATHS = Assets.xcassets;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pyra/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Pyra;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.76;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.Pyra;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		1849293E2FFB9BFE00F28DF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_ASSET_PATHS = Assets.xcassets;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pyra/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Pyra;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.76;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.Pyra;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+		184929402FFB9BFE00F28DF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.PyraTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pyra.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pyra";
+				TVOS_DEPLOYMENT_TARGET = 18.2;
+			};
+			name = Debug;
+		};
+		184929412FFB9BFE00F28DF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.PyraTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pyra.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pyra";
+				TVOS_DEPLOYMENT_TARGET = 18.2;
+			};
+			name = Release;
+		};
+		184929432FFB9BFE00F28DF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.PyraUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = Pyra;
+			};
+			name = Debug;
+		};
+		184929442FFB9BFE00F28DF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.PyraUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = Pyra;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		184929132FFB9BFB00F28DF0 /* Build configuration list for PBXProject "Pyra" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1849293A2FFB9BFE00F28DF0 /* Debug */,
+				1849293B2FFB9BFE00F28DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1849293C2FFB9BFE00F28DF0 /* Build configuration list for PBXNativeTarget "Pyra" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1849293D2FFB9BFE00F28DF0 /* Debug */,
+				1849293E2FFB9BFE00F28DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1849293F2FFB9BFE00F28DF0 /* Build configuration list for PBXNativeTarget "PyraTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				184929402FFB9BFE00F28DF0 /* Debug */,
+				184929412FFB9BFE00F28DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		184929422FFB9BFE00F28DF0 /* Build configuration list for PBXNativeTarget "PyraUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				184929432FFB9BFE00F28DF0 /* Debug */,
+				184929442FFB9BFE00F28DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 184929102FFB9BFB00F28DF0 /* Project object */;
+}
