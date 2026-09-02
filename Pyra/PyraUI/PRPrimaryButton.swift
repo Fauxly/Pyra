@@ -1,7 +1,7 @@
 //  PRPrimaryButton.swift
 //  Pyra
 //
-//  Created by Fauxly
+//  Created by Fauxly on 06.07.2026.
 //
 
 

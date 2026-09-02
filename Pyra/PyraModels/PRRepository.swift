@@ -2,7 +2,7 @@
 //  PRRepository.swift
 //  Pyra
 //
-//  Created by Fix's Tricks
+//  Created by Fauxly on 06.07.2026.
 //
 
 import Foundation

@@ -2,12 +2,7 @@
 //  PRImageCache.swift
 //  Pyra
 //
-//  Created by Fix’s Trick’s on 09.07.2026.
-//
-
-//
-//  PRImageCache.swift
-//  Pyra
+//  Created by Fauxly on 06.07.2026.
 //
 
 import UIKit

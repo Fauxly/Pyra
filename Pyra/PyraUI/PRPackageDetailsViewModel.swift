@@ -2,13 +2,8 @@
 //  PRPackageDetailsViewModel.swift
 //  Pyra
 //
-//  Created by Fix’s Trick’s on 06.07.2026.
-//
+//  Created by Fauxly on 06.07.2026.
 
-//
-//  PRPackageDetailsViewModel.swift
-//  Pyra
-//
 
 import Foundation
 
