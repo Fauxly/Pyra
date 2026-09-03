@@ -89,11 +89,11 @@ public final class PRCustomTabBarController: UIViewController {
 
         tabs = [
             Tab(title: "TAB_MAIN".localized, icon: "house", navController: navControllers[0]),
-            Tab(title: "TAB_CPREGORIES".localized, icon: "square.grid.2x2", navController: navControllers[1]),
+            Tab(title: "TAB_CATEGORIES".localized, icon: "square.grid.2x2", navController: navControllers[1]),
             Tab(title: "TAB_SOURCES".localized, icon: "tray.2", navController: navControllers[2]),
             Tab(title: "TAB_SEARCH".localized, icon: "magnifyingglass", navController: navControllers[3]),
             Tab(title: "TAB_INSTALLED".localized, icon: "checkmark.circle", navController: navControllers[4]),
-            Tab(title: "TAB_UPDPRES".localized, icon: "arrow.down.circle", navController: navControllers[5]),
+            Tab(title: "TAB_UPDATES".localized, icon: "arrow.down.circle", navController: navControllers[5]),
             Tab(title: "TAB_SETTINGS".localized, icon: "gearshape", navController: navControllers[6])
         ]
     }
