@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		18A1D3B630020995009B0045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18A1D3B530020995009B0045 /* Assets.xcassets */; };
+		18D6668030685AC1008340CB /* TVServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18D6667F30685AC1008340CB /* TVServices.framework */; };
+		18D6668730685AC1008340CB /* PyraTopShelf.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 18D6667D30685AC1008340CB /* PyraTopShelf.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,16 +27,46 @@
 			remoteGlobalIDString = 184929172FFB9BFB00F28DF0;
 			remoteInfo = Pyra;
 		};
+		18D6668530685AC1008340CB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 184929102FFB9BFB00F28DF0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 18D6667C30685AC1008340CB;
+			remoteInfo = PyraTopShelf;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		18D6668C30685AC1008340CB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				18D6668730685AC1008340CB /* PyraTopShelf.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		184929182FFB9BFB00F28DF0 /* Pyra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pyra.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		184929282FFB9BFD00F28DF0 /* PyraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PyraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		184929322FFB9BFE00F28DF0 /* PyraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PyraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		18A1D3B530020995009B0045 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		18D6667D30685AC1008340CB /* PyraTopShelf.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PyraTopShelf.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		18D6667F30685AC1008340CB /* TVServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVServices.framework; path = System/Library/Frameworks/TVServices.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		18D6668B30685AC1008340CB /* Exceptions for "PyraTopShelf" folder in "PyraTopShelf" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 18D6667C30685AC1008340CB /* PyraTopShelf */;
+		};
 		18E592422FFD821700493B98 /* Exceptions for "Pyra" folder in "Pyra" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -63,6 +95,14 @@
 			path = PyraUITests;
 			sourceTree = "<group>";
 		};
+		18D6668130685AC1008340CB /* PyraTopShelf */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				18D6668B30685AC1008340CB /* Exceptions for "PyraTopShelf" folder in "PyraTopShelf" target */,
+			);
+			path = PyraTopShelf;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +127,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		18D6667A30685AC1008340CB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				18D6668030685AC1008340CB /* TVServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -98,6 +146,8 @@
 				1849291A2FFB9BFB00F28DF0 /* Pyra */,
 				1849292B2FFB9BFD00F28DF0 /* PyraTests */,
 				184929352FFB9BFE00F28DF0 /* PyraUITests */,
+				18D6668130685AC1008340CB /* PyraTopShelf */,
+				18D6667E30685AC1008340CB /* Frameworks */,
 				184929192FFB9BFB00F28DF0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -108,6 +158,7 @@
 				184929182FFB9BFB00F28DF0 /* Pyra.app */,
 				184929282FFB9BFD00F28DF0 /* PyraTests.xctest */,
 				184929322FFB9BFE00F28DF0 /* PyraUITests.xctest */,
+				18D6667D30685AC1008340CB /* PyraTopShelf.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -117,6 +168,14 @@
 			children = (
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		18D6667E30685AC1008340CB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				18D6667F30685AC1008340CB /* TVServices.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -129,10 +188,12 @@
 				184929142FFB9BFB00F28DF0 /* Sources */,
 				184929152FFB9BFB00F28DF0 /* Frameworks */,
 				184929162FFB9BFB00F28DF0 /* Resources */,
+				18D6668C30685AC1008340CB /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				18D6668630685AC1008340CB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				1849291A2FFB9BFB00F28DF0 /* Pyra */,
@@ -190,6 +251,28 @@
 			productReference = 184929322FFB9BFE00F28DF0 /* PyraUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		18D6667C30685AC1008340CB /* PyraTopShelf */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 18D6668830685AC1008340CB /* Build configuration list for PBXNativeTarget "PyraTopShelf" */;
+			buildPhases = (
+				18D6667930685AC1008340CB /* Sources */,
+				18D6667A30685AC1008340CB /* Frameworks */,
+				18D6667B30685AC1008340CB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				18D6668130685AC1008340CB /* PyraTopShelf */,
+			);
+			name = PyraTopShelf;
+			packageProductDependencies = (
+			);
+			productName = PyraTopShelf;
+			productReference = 18D6667D30685AC1008340CB /* PyraTopShelf.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -212,6 +295,9 @@
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = 184929172FFB9BFB00F28DF0;
 					};
+					18D6667C30685AC1008340CB = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = 184929132FFB9BFB00F28DF0 /* Build configuration list for PBXProject "Pyra" */;
@@ -232,6 +318,7 @@
 				184929172FFB9BFB00F28DF0 /* Pyra */,
 				184929272FFB9BFD00F28DF0 /* PyraTests */,
 				184929312FFB9BFE00F28DF0 /* PyraUITests */,
+				18D6667C30685AC1008340CB /* PyraTopShelf */,
 			);
 		};
 /* End PBXProject section */
@@ -253,6 +340,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		184929302FFB9BFE00F28DF0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		18D6667B30685AC1008340CB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -283,6 +377,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		18D6667930685AC1008340CB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -295,6 +396,11 @@
 			isa = PBXTargetDependency;
 			target = 184929172FFB9BFB00F28DF0 /* Pyra */;
 			targetProxy = 184929332FFB9BFE00F28DF0 /* PBXContainerItemProxy */;
+		};
+		18D6668630685AC1008340CB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 18D6667C30685AC1008340CB /* PyraTopShelf */;
+			targetProxy = 18D6668530685AC1008340CB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -442,7 +548,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.77;
+				MARKETING_VERSION = 1.0.85;
 				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.Pyra;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -477,7 +583,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.77;
+				MARKETING_VERSION = 1.0.85;
 				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.Pyra;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -504,7 +610,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pyra.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pyra";
-				TVOS_DEPLOYMENT_TARGET = 18.2;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
 			};
 			name = Debug;
 		};
@@ -523,7 +629,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pyra.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pyra";
-				TVOS_DEPLOYMENT_TARGET = 18.2;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
 			};
 			name = Release;
 		};
@@ -558,6 +664,58 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
 				TEST_TARGET_NAME = Pyra;
+			};
+			name = Release;
+		};
+		18D6668930685AC1008340CB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PyraTopShelf/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PyraTopShelf;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.Pyra.PyraTopShelf;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		18D6668A30685AC1008340CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q5F9LXYCBK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PyraTopShelf/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PyraTopShelf;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fauxly.Pyra.PyraTopShelf;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
 			};
 			name = Release;
 		};
@@ -596,6 +754,15 @@
 			buildConfigurations = (
 				184929432FFB9BFE00F28DF0 /* Debug */,
 				184929442FFB9BFE00F28DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		18D6668830685AC1008340CB /* Build configuration list for PBXNativeTarget "PyraTopShelf" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				18D6668930685AC1008340CB /* Debug */,
+				18D6668A30685AC1008340CB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
