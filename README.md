@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-tvOS_17+-black?style=flat-square&logo=apple" />
-  <img src="https://img.shields.io/badge/jailbreak-palera1n_rootful_%7C_rootless-0A84FF?style=flat-square" />
+  <img src="https://img.shields.io/badge/jailbreak-rootful_%7C_rootless-0A84FF?style=flat-square" />
   <img src="https://img.shields.io/badge/swift-5-FA7343?style=flat-square&logo=swift&logoColor=white" />
   <img src="https://img.shields.io/badge/license-TBD-lightgrey?style=flat-square" />
 </p>
@@ -46,10 +46,11 @@ There's no proper on-TV package manager for palera1n on Apple TV. The recommende
 ## Requirements
 
 ```
-Apple TV 4K (1st gen, A10X) or any palera1n-supported model
-palera1n jailbreak — rootful or rootless
+Any jailbroken Apple TV — rootful or rootless
 tvOS 17.0+
 ```
+
+Pyra doesn't depend on a specific model or jailbreak tool: it works with whatever APT/dpkg bootstrap is installed and detects rootful vs rootless (`/var/jb`) on its own.
 
 ---
 
