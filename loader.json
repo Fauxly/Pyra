@@ -256,6 +256,38 @@
                         "URIs": "https://lrdsnow.github.io/purepkg",
                         "Suites": "./",
                         "Components": ""
+                    },
+                    {
+                        "Types": "deb",
+                        "URIs": "https://fauxly.github.io/",
+                        "Suites": "./",
+                        "Components": ""
+                    }
+                ]
+            },
+            "rootless": {
+                "dotfile": "/var/jb/.procursus_strapped",
+                "bootstraps": [],
+                "managers": [
+                    {
+                        "name": "Pyra",
+                        "uri": "https://github.com/Fauxly/Pyra/releases/latest/download/com.fauxly.pyra_rootless_appletvos-arm64.deb",
+                        "icon": "https://raw.githubusercontent.com/Fauxly/Pyra/main/icon.png",
+                        "filePath": "/var/jb/Applications/Pyra.app"
+                    }
+                ],
+                "repositories": [
+                    {
+                        "Types": "deb",
+                        "URIs": "https://repo.palera.in",
+                        "Suites": "./",
+                        "Components": ""
+                    },
+                    {
+                        "Types": "deb",
+                        "URIs": "https://fauxly.github.io/",
+                        "Suites": "./",
+                        "Components": ""
                     }
                 ]
             }
