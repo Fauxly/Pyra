@@ -1,0 +1,8 @@
+Package: com.fauxly.pyra
+Name: Pyra
+Version: 1.0.85-1
+Architecture: iphoneos-arm64
+Description: Native package manager for jailbroken Apple TV
+Maintainer: Fauxly
+Author: Fauxly
+Section: Packaging

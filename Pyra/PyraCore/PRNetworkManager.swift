@@ -18,28 +18,35 @@ public class PRNetworkManager {
     }
 
     public func fetchPackages(from repository: PRRepository) async throws -> [PRPackage] {
-        // 1. Обычная вложенная структура (Procursus-style): dists/{arch}/{distribution}/{component}/binary-{arch}/Packages
-        if let text = try await fetchPackagesText(url: repository.packagesURL) {
-            return stamp(PRPackageParser().parse(text), with: repository)
-        }
-        if let text = try await fetchPackagesText(
-            url: repository.packagesURL.appendingPathExtension("gz"),
-            isGzip: true
-        ) {
-            return stamp(PRPackageParser().parse(text), with: repository)
+        var allPackages: [PRPackage] = []
+
+        // 1. Вложенная структура (dists/) — пробуем каждую архитектуру
+        for url in repository.packagesURLs {
+            if let text = try await fetchPackagesText(url: url) {
+                allPackages.append(contentsOf: stamp(PRPackageParser().parse(text), with: repository))
+                continue
+            }
+            if let text = try await fetchPackagesText(
+                url: url.appendingPathExtension("gz"),
+                isGzip: true
+            ) {
+                allPackages.append(contentsOf: stamp(PRPackageParser().parse(text), with: repository))
+            }
         }
 
-        // 2. "Плоский" формат (flat repository format) — Packages лежит прямо в корне репозитория,
-        // без вложенности dists/. Многие маленькие самодельные репозитории (в том числе размещённые
-        // прямо на GitHub Pages) устроены именно так.
+        if !allPackages.isEmpty {
+            return preferSystemArchitecture(allPackages)
+        }
+
+        // 2. Плоский формат — Packages в корне (архитектура не участвует в URL)
         if let text = try await fetchPackagesText(url: repository.flatPackagesURL) {
-            return stamp(PRPackageParser().parse(text), with: repository)
+            return preferSystemArchitecture(stamp(PRPackageParser().parse(text), with: repository))
         }
         if let text = try await fetchPackagesText(
             url: repository.flatPackagesURL.appendingPathExtension("gz"),
             isGzip: true
         ) {
-            return stamp(PRPackageParser().parse(text), with: repository)
+            return preferSystemArchitecture(stamp(PRPackageParser().parse(text), with: repository))
         }
 
         throw NSError(
@@ -47,6 +54,28 @@ public class PRNetworkManager {
             code: -4,
             userInfo: [NSLocalizedDescriptionKey: "ERROR_PACKAGES_NOT_FOUND".localized]
         )
+    }
+
+    /// Если один и тот же пакет (ID + версия) лежит в репозитории в нескольких архитектурах —
+    /// например, Pyra публикуется и как appletvos-arm64 (rootful), и как iphoneos-arm64 (rootless) —
+    /// оставляем только вариант под текущее окружение. Иначе в каталоге окажутся два одинаковых
+    /// пакета, и установка (она идёт с --force-architecture, потому что многие tvOS-твики
+    /// помечены appletvos-arm64, но работают и на rootless) может взять чужой.
+    /// Пакеты, у которых вариант один, не трогаем — даже если архитектура не "родная".
+    private func preferSystemArchitecture(_ packages: [PRPackage]) -> [PRPackage] {
+        let preferred = PRPathManager.shared.isRootless ? "iphoneos-arm64" : "appletvos-arm64"
+
+        let groups = Dictionary(grouping: packages) { "\($0.packageID.lowercased())|\($0.version)" }
+        let keysWithPreferred = Set(groups.compactMap { key, variants in
+            variants.count > 1 && variants.contains { $0.architecture == preferred } ? key : nil
+        })
+        guard !keysWithPreferred.isEmpty else { return packages }
+
+        // Сохраняем исходный порядок пакетов — от него зависит порядок плиток в рядах
+        return packages.filter { package in
+            let key = "\(package.packageID.lowercased())|\(package.version)"
+            return !keysWithPreferred.contains(key) || package.architecture == preferred
+        }
     }
 
     /// Проставляет sourceRepository каждому распарсенному пакету — без этого карточка пакета
@@ -82,7 +111,7 @@ public class PRNetworkManager {
         }
 
         guard httpResponse.statusCode == 200 else {
-            throw NSError(domain: "PRNetworkManager", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: String(format: "ERROR_SERVER_STPRUS".localized, httpResponse.statusCode)])
+            throw NSError(domain: "PRNetworkManager", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: String(format: "ERROR_SERVER_STATUS".localized, httpResponse.statusCode)])
         }
 
         let rawData: Data
