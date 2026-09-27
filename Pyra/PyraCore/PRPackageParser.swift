@@ -84,7 +84,10 @@ public final class PRPackageParser {
             section: section,
             author: author,
             depends: depends,
-            iconURL: iconURL
+            iconURL: iconURL,
+            size: fields["size"].flatMap { Int64($0) },
+            installedSizeKB: fields["installed-size"].flatMap { Int64($0) },
+            sileoDepictionURL: fields["sileodepiction"]
         )
     }
 

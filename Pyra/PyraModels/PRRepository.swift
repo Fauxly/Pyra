@@ -31,7 +31,7 @@ public struct PRRepository: Identifiable, Hashable, Codable {
         baseURL: URL,
         distribution: String = "1800",
         components: [String] = ["main"],
-        architectures: [String] = ["appletvos-arm64"]
+        architectures: [String] = ["appletvos-arm64", "iphoneos-arm64"]
     ) {
         self.name = name
         self.baseURL = baseURL
@@ -44,30 +44,36 @@ public struct PRRepository: Identifiable, Hashable, Codable {
     /// https://apt.procurs.us/dists/appletvos-arm64/2000/main/binary-appletvos-arm64/Packages).
     /// Собран через appendingPathComponent, а не ручную склейку строк — так не нужно
     /// вручную следить за лишними/пропущенными слэшами между сегментами.
-    public var packagesURL: URL {
+    public var packagesURLs: [URL] {
         let component = components.first ?? "main"
-        let arch = architectures.first ?? "appletvos-arm64"
-
-        return baseURL
-            .appendingPathComponent("dists")
-            .appendingPathComponent(arch)
-            .appendingPathComponent(distribution)
-            .appendingPathComponent(component)
-            .appendingPathComponent("binary-\(arch)")
-            .appendingPathComponent("Packages")
+        return architectures.map { arch in
+            baseURL
+                .appendingPathComponent("dists")
+                .appendingPathComponent(arch)
+                .appendingPathComponent(distribution)
+                .appendingPathComponent(component)
+                .appendingPathComponent("binary-\(arch)")
+                .appendingPathComponent("Packages")
+        }
     }
 
     /// Строковый вариант — оставлен для обратной совместимости с кодом, который ожидает String.
-    public var packagesURLString: String {
-        packagesURL.absoluteString
+    public var packagesURL: URL {
+        packagesURLs.first!
     }
-
+    
     /// "Плоский" формат APT-репозитория (flat repository format) — Packages лежит прямо
     /// в корне репозитория, без вложенности dists/{arch}/{distribution}/{component}/...
     /// Многие маленькие самодельные Cydia/Sileo/nitoTV-репозитории (например, размещённые
     /// прямо на GitHub Pages) устроены именно так — вложенность dists/ у них попросту нет.
     public var flatPackagesURL: URL {
         baseURL.appendingPathComponent("Packages")
+    }
+
+    /// Иконка репозитория по соглашению Cydia/Sileo — CydiaIcon.png в корне репо.
+    /// Есть не у всех: вызывающая сторона должна спокойно переживать 404.
+    public var iconURL: URL {
+        baseURL.appendingPathComponent("CydiaIcon.png")
     }
 
     /// Собирает ссылку на .deb конкретного пакета. Поле Filename в control-записи (Packages) —

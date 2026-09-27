@@ -5,13 +5,13 @@
 
 import UIKit
 
-/// Отдельная вкладка "Обновления" — показывает только те установленные пакеты,
-/// для которых в подключённых репозиториях есть более новая версия. Тап по строке
-/// открывает карточку пакета с уже готовой кнопкой "Обновить (vX → vY)".
-public final class PRUpdatesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+/// Вкладка "Обновления": сверху сводка (сколько обновлений, сколько качать, "Обновить всё"),
+/// ниже широкие карточки в две колонки с версиями "было → станет". Нажатие на карточку —
+/// карточка пакета с готовой кнопкой "Обновить".
+public final class PRUpdatesViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
 
-    private let tableView = UITableView(frame: .zero, style: .plain)
-    private let emptyLabel = UILabel()
+    private var collectionView: UICollectionView!
+    private let emptyStack = UIStackView()
 
     private struct UpdateItem {
         let installed: PRInstalledPackage
@@ -19,6 +19,18 @@ public final class PRUpdatesViewController: UIViewController, UITableViewDataSou
     }
 
     private var updates: [UpdateItem] = []
+
+    // Сводка сверху
+    private let summaryCard = UIView()
+    private let summaryTitleLabel = UILabel()
+    private let summarySubtitleLabel = UILabel()
+    private let updateAllButton = PRActionButton()
+    private let batchStatusLabel = UILabel()
+    private var isUpdatingAll = false
+
+    /// Вызывается после каждого пересчёта списка — PRCustomTabBarController вешает сюда
+    /// обновление бейджа на кнопке вкладки
+    var onUpdatesCountChange: ((Int) -> Void)?
 
     /// Полный каталог из всех репозиториев — приходит извне из PRCustomTabBarController.
     var allPackages: [PRPackage] = [] {
@@ -28,8 +40,10 @@ public final class PRUpdatesViewController: UIViewController, UITableViewDataSou
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = PRTheme.ink
-        setupTableView()
-        setupEmptyLabel()
+        setupSummary()
+        setupCollectionView()
+        setupEmptyState()
+        rebuildUpdatesList()
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -39,31 +53,201 @@ public final class PRUpdatesViewController: UIViewController, UITableViewDataSou
         rebuildUpdatesList()
     }
 
-    private func setupTableView() {
-        tableView.frame = view.bounds
-        tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        tableView.backgroundColor = .clear
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "UpdateCell")
-        view.addSubview(tableView)
-    }
+    // MARK: - Вёрстка
 
-    private func setupEmptyLabel() {
-        emptyLabel.text = "UPDPRES_EMPTY".localized
-        emptyLabel.textColor = PRTheme.textSecondary
-        emptyLabel.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-        emptyLabel.textAlignment = .center
-        emptyLabel.numberOfLines = 0
-        emptyLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(emptyLabel)
+    private func setupSummary() {
+        summaryCard.backgroundColor = PRTheme.surface
+        summaryCard.layer.cornerRadius = 28
+        summaryCard.layer.cornerCurve = .continuous
+        summaryCard.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(summaryCard)
+
+        let glow = PRGradientView()
+        glow.gradientLayer.colors = [PRTheme.brass.withAlphaComponent(0.22).cgColor, PRTheme.brass.withAlphaComponent(0).cgColor]
+        glow.gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        glow.gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        glow.layer.cornerRadius = 28
+        glow.clipsToBounds = true
+        glow.isUserInteractionEnabled = false
+        glow.translatesAutoresizingMaskIntoConstraints = false
+        summaryCard.addSubview(glow)
+
+        let icon = UIImageView(image: UIImage(systemName: "arrow.down.app.fill"))
+        icon.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 56, weight: .semibold)
+        icon.tintColor = PRTheme.brass
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        summaryCard.addSubview(icon)
+
+        summaryTitleLabel.font = UIFont.systemFont(ofSize: 40, weight: .heavy)
+        summaryTitleLabel.textColor = PRTheme.textPrimary
+        summarySubtitleLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
+        summarySubtitleLabel.textColor = PRTheme.textSecondary
+
+        let textStack = UIStackView(arrangedSubviews: [summaryTitleLabel, summarySubtitleLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 4
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+        summaryCard.addSubview(textStack)
+
+        updateAllButton.setImage(UIImage(systemName: "arrow.triangle.2.circlepath"), for: .normal)
+        updateAllButton.addTarget(self, action: #selector(updateAllTapped), for: .primaryActionTriggered)
+        updateAllButton.translatesAutoresizingMaskIntoConstraints = false
+        summaryCard.addSubview(updateAllButton)
+
+        batchStatusLabel.font = UIFont.systemFont(ofSize: 22, weight: .medium)
+        batchStatusLabel.textColor = PRTheme.brass
+        batchStatusLabel.textAlignment = .right
+        batchStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        summaryCard.addSubview(batchStatusLabel)
 
         NSLayoutConstraint.activate([
-            emptyLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emptyLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            emptyLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 60),
-            emptyLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -60)
+            summaryCard.topAnchor.constraint(equalTo: view.topAnchor, constant: 24),
+            summaryCard.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: PRGridLayout.horizontalInset),
+            summaryCard.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -PRGridLayout.horizontalInset),
+            summaryCard.heightAnchor.constraint(equalToConstant: 160),
+
+            glow.topAnchor.constraint(equalTo: summaryCard.topAnchor),
+            glow.bottomAnchor.constraint(equalTo: summaryCard.bottomAnchor),
+            glow.leadingAnchor.constraint(equalTo: summaryCard.leadingAnchor),
+            glow.trailingAnchor.constraint(equalTo: summaryCard.trailingAnchor),
+
+            icon.leadingAnchor.constraint(equalTo: summaryCard.leadingAnchor, constant: 40),
+            icon.centerYAnchor.constraint(equalTo: summaryCard.centerYAnchor),
+
+            textStack.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 30),
+            textStack.centerYAnchor.constraint(equalTo: summaryCard.centerYAnchor),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: batchStatusLabel.leadingAnchor, constant: -30),
+
+            updateAllButton.trailingAnchor.constraint(equalTo: summaryCard.trailingAnchor, constant: -40),
+            updateAllButton.centerYAnchor.constraint(equalTo: summaryCard.centerYAnchor),
+            updateAllButton.heightAnchor.constraint(equalToConstant: 80),
+
+            batchStatusLabel.trailingAnchor.constraint(equalTo: updateAllButton.leadingAnchor, constant: -30),
+            batchStatusLabel.centerYAnchor.constraint(equalTo: summaryCard.centerYAnchor),
+            batchStatusLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 520)
         ])
+    }
+
+    private func setupCollectionView() {
+        let layout = UICollectionViewCompositionalLayout { _, _ in
+            PRGridLayout.section(columns: 2, itemHeight: 170, spacing: 36, topInset: 30)
+        }
+        collectionView = PRGridLayout.makeCollectionView(in: view, layout: layout)
+        collectionView.register(PRUpdateCell.self, forCellWithReuseIdentifier: PRUpdateCell.reuseIdentifier)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: summaryCard.bottomAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+    }
+
+    /// Пусто — большая бирюзовая галочка и "Все пакеты актуальны" вместо пустой сетки
+    private func setupEmptyState() {
+        let icon = UIImageView(image: UIImage(systemName: "checkmark.seal.fill"))
+        icon.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 110, weight: .semibold)
+        icon.tintColor = PRTheme.teal
+
+        let label = UILabel()
+        label.text = "UPDATES_EMPTY".localized
+        label.textColor = PRTheme.textPrimary
+        label.font = UIFont.systemFont(ofSize: 34, weight: .bold)
+
+        emptyStack.addArrangedSubview(icon)
+        emptyStack.addArrangedSubview(label)
+        emptyStack.axis = .vertical
+        emptyStack.alignment = .center
+        emptyStack.spacing = 24
+        emptyStack.isHidden = true
+        emptyStack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emptyStack)
+        NSLayoutConstraint.activate([
+            emptyStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyStack.centerYAnchor.constraint(equalTo: collectionView.centerYAnchor)
+        ])
+    }
+
+    private func updateHeader() {
+        guard isViewLoaded else { return }
+        summaryTitleLabel.text = updates.isEmpty
+            ? "UPDATES_EMPTY".localized
+            : String(format: "UPDATES_SUMMARY_TITLE".localized, updates.count)
+
+        let totalSize = updates.compactMap { $0.available.size }.reduce(0, +)
+        if totalSize > 0 {
+            let formatter = ByteCountFormatter()
+            formatter.countStyle = .file
+            summarySubtitleLabel.text = String(format: "UPDATES_SUMMARY_SIZE".localized, formatter.string(fromByteCount: totalSize))
+        } else {
+            summarySubtitleLabel.text = nil
+        }
+
+        guard !isUpdatingAll else { return }
+        updateAllButton.setTitle("UPDATES_UPDATE_ALL_SHORT".localized, for: .normal)
+        updateAllButton.isEnabled = !updates.isEmpty
+    }
+
+    // MARK: - Обновить всё
+
+    @objc private func updateAllTapped() {
+        guard !isUpdatingAll, !updates.isEmpty else { return }
+        let items = updates
+        isUpdatingAll = true
+        updateAllButton.isEnabled = false
+
+        Task {
+            var failed: [String] = []
+            let dpkgPath = PRPathManager.shared.makePath("/usr/bin/dpkg")
+
+            for (index, item) in items.enumerated() {
+                await MainActor.run {
+                    self.batchStatusLabel.text = String(
+                        format: "UPDATES_PROGRESS".localized,
+                        index + 1, items.count, item.installed.name
+                    )
+                }
+
+                guard let repository = item.available.sourceRepository else {
+                    failed.append(item.installed.name)
+                    continue
+                }
+
+                do {
+                    // Тот же путь, что и в карточке пакета: dpkg -i, при провале зависимостей —
+                    // --force-depends, а итог проверяем по базе dpkg, не по exit code
+                    let localURL = try await PRDownloadManager.shared.download(package: item.available, repository: repository)
+                    let result = try await PRSpawn.runCommand(dpkgPath, arguments: ["--force-architecture", "-i", localURL.path], elevated: true)
+                    if result.exitCode != 0 {
+                        _ = try await PRSpawn.runCommand(dpkgPath, arguments: ["-i", "--force-depends", localURL.path], elevated: true)
+                    }
+                    PRFileManager.shared.removeDownloadedFile(for: item.available)
+
+                    let installedNow = PRStatusParser.shared.readInstalledPackages()
+                        .first { $0.id.lowercased() == item.installed.id.lowercased() }?.version
+                    let isUpToDate = installedNow.map {
+                        PRDependencyChecker.compareVersions($0, ">=", item.available.version)
+                    } ?? false
+                    if !isUpToDate {
+                        failed.append(item.installed.name)
+                    }
+                } catch {
+                    failed.append(item.installed.name)
+                }
+            }
+
+            await MainActor.run {
+                self.isUpdatingAll = false
+                PRInstalledState.shared.refresh()
+                self.rebuildUpdatesList()
+
+                let updatedCount = items.count - failed.count
+                self.batchStatusLabel.text = failed.isEmpty
+                    ? String(format: "UPDATES_DONE".localized, updatedCount)
+                    : String(format: "UPDATES_DONE_WITH_ERRORS".localized, updatedCount, failed.joined(separator: ", "))
+            }
+        }
     }
 
     private func rebuildUpdatesList() {
@@ -82,66 +266,34 @@ public final class PRUpdatesViewController: UIViewController, UITableViewDataSou
             return UpdateItem(installed: pkg, available: latest)
         }
 
-        tableView.reloadData()
-        emptyLabel.isHidden = !updates.isEmpty
-        tableView.isHidden = updates.isEmpty
+        onUpdatesCountChange?(updates.count)
+        updateHeader()
+
+        collectionView?.reloadData()
+        emptyStack.isHidden = !updates.isEmpty
+        collectionView?.isHidden = updates.isEmpty
     }
 
-    // MARK: - UITableViewDataSource
+    // MARK: - UICollectionViewDataSource
 
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         updates.count
     }
 
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "UpdateCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "UpdateCell")
-        cell.backgroundColor = .clear
-
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-
-        let item = updates[indexPath.row]
-
-        cell.textLabel?.text = item.installed.name
-        cell.textLabel?.textColor = PRTheme.textPrimary
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-
-        cell.detailTextLabel?.text = String(format: "UPDPRES_VERSION_CHANGE".localized, item.installed.version, item.available.version)
-        cell.detailTextLabel?.textColor = PRTheme.brass
-        cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 20, weight: .regular)
-
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PRUpdateCell.reuseIdentifier, for: indexPath) as? PRUpdateCell else {
+            return UICollectionViewCell()
+        }
+        let item = updates[indexPath.item]
+        cell.configure(name: item.installed.name, installedVersion: item.installed.version, available: item.available)
         return cell
     }
 
-    // MARK: - UITableViewDelegate
+    // MARK: - UICollectionViewDelegate
 
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        let item = updates[indexPath.row]
-        let detailsVC = PRPackageDetailsViewController(package: item.available)
-        navigationController?.pushViewController(detailsVC, animated: true)
-    }
-
-    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        120
-    }
-
-    // Свап цвета текста при фокусе — та же логика, что в Настройках/Установленном
-    public func tableView(_ tableView: UITableView, didUpdateFocusIn context: UITableViewFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        if let nextIndexPath = context.nextFocusedIndexPath,
-           let cell = tableView.cellForRow(at: nextIndexPath) {
-            coordinator.addCoordinatedAnimations({
-                cell.textLabel?.textColor = PRTheme.ink
-                cell.detailTextLabel?.textColor = PRTheme.ink.withAlphaComponent(0.7)
-            }, completion: nil)
-        }
-
-        if let previousIndexPath = context.previouslyFocusedIndexPath {
-            tableView.reloadRows(at: [previousIndexPath], with: .none)
-        }
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let item = updates[indexPath.item]
+        navigationController?.pushViewController(PRPackageDetailsViewController(package: item.available), animated: true)
     }
 }
 

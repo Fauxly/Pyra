@@ -19,6 +19,13 @@ public struct PRPackage: Identifiable {
     public var author: String?         // Автор/Разработчик твика
     public var depends: String?        // Зависимости (например: firmware (>= 15.0), mobilesubstrate)
     public var iconURL: String?        // Прямая ссылка на иконку твика для отображения в сетке
+
+    /// Size — размер .deb в байтах (сколько качать)
+    public var size: Int64?
+    /// Installed-Size — сколько займёт после установки, по спецификации Debian в КИЛОБАЙТАХ
+    public var installedSizeKB: Int64?
+    /// SileoDepiction — ссылка на JSON-страницу пакета в формате Sileo (скриншоты, changelog)
+    public var sileoDepictionURL: String?
     
     /// Репозиторий, из которого этот пакет был загружен — проставляется в PRNetworkManager
     /// сразу после парсинга Packages. Нужен, чтобы карточка пакета (PRPackageDetailsViewController)
@@ -31,14 +38,17 @@ public struct PRPackage: Identifiable {
         packageID: String,
         name: String,
         version: String,
-        architecture: String = "appletvos-arm64",
+        architecture: String = "iphoneos-arm64",
         description: String = "",
         filename: String = "",
         section: String = "Unknown",
         author: String? = nil,
         depends: String? = nil,
         iconURL: String? = nil,
-        sourceRepository: PRRepository? = nil
+        sourceRepository: PRRepository? = nil,
+        size: Int64? = nil,
+        installedSizeKB: Int64? = nil,
+        sileoDepictionURL: String? = nil
     ) {
         self.packageID = packageID
         self.name = name
@@ -51,5 +61,8 @@ public struct PRPackage: Identifiable {
         self.depends = depends
         self.iconURL = iconURL
         self.sourceRepository = sourceRepository
+        self.size = size
+        self.installedSizeKB = installedSizeKB
+        self.sileoDepictionURL = sileoDepictionURL
     }
 }

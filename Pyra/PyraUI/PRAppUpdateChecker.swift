@@ -52,8 +52,15 @@ enum PRAppUpdateChecker {
             return nil
         }
 
+        // В релизе два пакета: rootful (appletvos-arm64) и rootless (iphoneos-arm64).
+        // Берём тот, что под текущее окружение; если такого нет (старые релизы с одним
+        // пакетом) — любой .deb, как раньше.
+        let preferredArchitecture = PRPathManager.shared.isRootless ? "iphoneos-arm64" : "appletvos-arm64"
+        let debAssets = assets.filter { ($0["name"] as? String)?.hasSuffix(".deb") == true }
+        let matchingAsset = debAssets.first { ($0["name"] as? String)?.contains(preferredArchitecture) == true }
+
         guard
-            let debAsset = assets.first(where: { ($0["name"] as? String)?.hasSuffix(".deb") == true }),
+            let debAsset = matchingAsset ?? debAssets.first,
             let downloadURLString = debAsset["browser_download_url"] as? String,
             let downloadURL = URL(string: downloadURLString)
         else {

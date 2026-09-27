@@ -137,7 +137,7 @@ final class PRAddRepositoryViewController: UIViewController, UITextFieldDelegate
 
         // Показываем короткий домен добавленного репозитория, а не весь URL — компактнее
         let host = URL(string: text)?.host ?? text
-        statusLabel.text = String(format: "ADD_REPO_ADDED_STPRUS".localized, addedCount, host)
+        statusLabel.text = String(format: "ADD_REPO_ADDED_STATUS".localized, addedCount, host)
 
         // Сбрасываем поле для следующего URL — экран остаётся открытым
         textField.text = "https://"

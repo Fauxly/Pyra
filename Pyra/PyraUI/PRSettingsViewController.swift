@@ -5,18 +5,35 @@
 
 import UIKit
 
-final class PRSettingsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+/// Настройки — сверху карточка Pyra (версия, окружение, проверка обновлений), ниже
+/// плитки настроек по группам с цветными иконками. Переключатели показаны "таблеткой",
+/// действия с последствиями (respring, сброс, очистка) по-прежнему спрашивают подтверждение.
+final class PRSettingsViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
 
-    private enum Section: Int, CaseIterable {
-        case language
-        case general
-        case storage
-        case repositories
-        case system
-        case about
+    private struct Tile {
+        let symbol: String
+        let color: UIColor
+        let title: String
+        var value: String? = nil
+        var highlightValue = false
+        var toggle: Bool? = nil
+        let action: () -> Void
     }
 
-    private let tableView = UITableView(frame: .zero, style: .plain)
+    private struct TileSection {
+        let title: String
+        let tiles: [Tile]
+    }
+
+    private enum Palette {
+        static let blue = UIColor(red: 0x7F / 255, green: 0xB0 / 255, blue: 0xE8 / 255, alpha: 1)
+        static let lavender = UIColor(red: 0x9D / 255, green: 0x8F / 255, blue: 0xE0 / 255, alpha: 1)
+        static let coral = UIColor(red: 0xE0 / 255, green: 0x8A / 255, blue: 0x7A / 255, alpha: 1)
+        static let olive = UIColor(red: 0x9C / 255, green: 0xC4 / 255, blue: 0x6E / 255, alpha: 1)
+    }
+
+    private var collectionView: UICollectionView!
+    private var sections: [TileSection] = []
     private let languages: [PRLanguage] = [.russian, .english]
 
     private let byteFormatter: ByteCountFormatter = {
@@ -29,287 +46,234 @@ final class PRSettingsViewController: UIViewController, UITableViewDataSource, U
         super.viewDidLoad()
         title = "TAB_SETTINGS".localized
         view.backgroundColor = PRTheme.ink
-        setupTableView()
-    }
 
-    private func setupTableView() {
-        tableView.frame = view.bounds
-        tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        tableView.backgroundColor = .clear
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "LanguageCell")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "StorageCell")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ResetRepositoriesCell")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "AutoUpdateCell")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "AboutCell")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SystemCell")
-        view.addSubview(tableView)
-    }
+        let header = makeHeaderCard()
+        view.addSubview(header)
 
-    // MARK: - UITableViewDataSource
-
-    func numberOfSections(in tableView: UITableView) -> Int {
-        Section.allCases.count
-    }
-
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        sectionTitle(for: section)
-    }
-    
-    private func sectionTitle(for section: Int) -> String? {
-        switch Section(rawValue: section) {
-        case .language: return "SETTINGS_LANGUAGE_SECTION".localized
-        case .general: return "SETTINGS_GENERAL_SECTION".localized
-        case .storage: return "SETTINGS_STORAGE_SECTION".localized
-        case .repositories: return "SETTINGS_REPOSITORIES_SECTION".localized
-        case .system: return "SETTINGS_SYSTEM_SECTION".localized
-        case .about: return "SETTINGS_ABOUT_SECTION".localized
-        case .none: return nil
+        let layout = UICollectionViewCompositionalLayout { _, _ in
+            PRGridLayout.section(columns: 2, itemHeight: 140, spacing: 36, header: true, topInset: 6, bottomInset: 30)
         }
+        collectionView = PRGridLayout.makeCollectionView(in: view, layout: layout)
+        collectionView.register(PRSettingTileCell.self, forCellWithReuseIdentifier: PRSettingTileCell.reuseIdentifier)
+        collectionView.register(PRSectionHeaderView.self,
+                                forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                                withReuseIdentifier: PRSectionHeaderView.reuseIdentifier)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+
+        NSLayoutConstraint.activate([
+            header.topAnchor.constraint(equalTo: view.topAnchor, constant: 24),
+            header.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: PRGridLayout.horizontalInset),
+            header.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -PRGridLayout.horizontalInset),
+            header.heightAnchor.constraint(equalToConstant: 170),
+
+            collectionView.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 10),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch Section(rawValue: section) {
-        case .language: return languages.count
-        case .general: return 1
-        case .storage: return 1
-        case .repositories: return 1
-        case .system: return 2
-        case .about: return 3
-        case .none: return 0
-        }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Размер кэша и число источников могли поменяться на других вкладках
+        collectionView.reloadData()
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        switch Section(rawValue: indexPath.section) {
-        case .language:
-            return languageCell(for: indexPath)
-        case .general:
-            return autoUpdateCell(for: indexPath)
-        case .storage:
-            return storageCell(for: indexPath)
-        case .repositories:
-            return resetRepositoriesCell(for: indexPath)
-        case .system:
-            return systemCell(for: indexPath)
-        case .about:
-            return aboutCell(for: indexPath)
-        case .none:
-            return UITableViewCell()
-        }
+    // MARK: - Карточка Pyra
+
+    private func makeHeaderCard() -> UIView {
+        let card = UIView()
+        card.backgroundColor = PRTheme.surface
+        card.layer.cornerRadius = 30
+        card.layer.cornerCurve = .continuous
+        card.translatesAutoresizingMaskIntoConstraints = false
+
+        let glow = PRGradientView()
+        glow.gradientLayer.colors = [PRTheme.brass.withAlphaComponent(0.25).cgColor, PRTheme.brass.withAlphaComponent(0).cgColor]
+        glow.gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        glow.gradientLayer.endPoint = CGPoint(x: 0.7, y: 0.5)
+        glow.layer.cornerRadius = 30
+        glow.clipsToBounds = true
+        glow.isUserInteractionEnabled = false
+        glow.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(glow)
+
+        // Pyra — "огонь": латунное пламя в скруглённом квадрате как знак приложения
+        let logo = UIView()
+        logo.backgroundColor = PRTheme.brass
+        logo.layer.cornerRadius = 30
+        logo.layer.cornerCurve = .continuous
+        logo.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(logo)
+        let flame = UIImageView(image: UIImage(systemName: "flame.fill"))
+        flame.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 54, weight: .bold)
+        flame.tintColor = PRTheme.ink
+        flame.translatesAutoresizingMaskIntoConstraints = false
+        logo.addSubview(flame)
+
+        let nameLabel = UILabel()
+        nameLabel.text = "Pyra"
+        nameLabel.font = UIFont.systemFont(ofSize: 52, weight: .heavy)
+        nameLabel.textColor = PRTheme.textPrimary
+
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        let environment = PRPathManager.shared.isRootless ? "Rootless" : "Rootful"
+        let metaLabel = UILabel()
+        metaLabel.text = "v\(version) (\(build))  ·  \(environment)  ·  tvOS \(UIDevice.current.systemVersion)"
+        metaLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
+        metaLabel.textColor = PRTheme.textSecondary
+
+        let textStack = UIStackView(arrangedSubviews: [nameLabel, metaLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 2
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(textStack)
+
+        let updateButton = PRActionButton()
+        updateButton.setImage(UIImage(systemName: "arrow.down.circle.fill"), for: .normal)
+        updateButton.setTitle("SETTINGS_CHECK_UPDATE".localized, for: .normal)
+        updateButton.addTarget(self, action: #selector(checkUpdateTapped), for: .primaryActionTriggered)
+        updateButton.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(updateButton)
+
+        NSLayoutConstraint.activate([
+            glow.topAnchor.constraint(equalTo: card.topAnchor),
+            glow.bottomAnchor.constraint(equalTo: card.bottomAnchor),
+            glow.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            glow.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+
+            logo.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 36),
+            logo.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            logo.widthAnchor.constraint(equalToConstant: 110),
+            logo.heightAnchor.constraint(equalToConstant: 110),
+            flame.centerXAnchor.constraint(equalTo: logo.centerXAnchor),
+            flame.centerYAnchor.constraint(equalTo: logo.centerYAnchor),
+
+            textStack.leadingAnchor.constraint(equalTo: logo.trailingAnchor, constant: 32),
+            textStack.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: updateButton.leadingAnchor, constant: -30),
+
+            updateButton.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -40),
+            updateButton.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            updateButton.heightAnchor.constraint(equalToConstant: 80)
+        ])
+        return card
     }
 
-    private func languageCell(for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "LanguageCell", for: indexPath)
-        cell.backgroundColor = .clear
+    @objc private func checkUpdateTapped() {
+        checkForAppUpdate()
+    }
 
-        let language = languages[indexPath.row]
-        let isSelected = language == PRLocalizationManager.currentLanguage
+    // MARK: - Плитки
 
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
+    /// Собирается заново при каждой перерисовке — значения (кэш, число источников,
+    /// состояние переключателя) всегда актуальные
+    private func makeSections() -> [TileSection] {
+        // Собираем по шагам с явными типами, а не одним большим литералом массива —
+        // иначе компилятор (особенно с -O в Release) может не успеть вывести типы
+        let autoUpdate: Bool = PRAppSettings.autoUpdateOnLaunch
+        let autoUpdateText: String = autoUpdate ? "SETTINGS_STATE_ON".localized : "SETTINGS_STATE_OFF".localized
+        let cacheText: String = byteFormatter.string(fromByteCount: PRFileManager.shared.cacheSize())
+        let sourcesText: String = String(format: "SETTINGS_REPOSITORIES_COUNT".localized, PRRepositoryManager.shared.repositories.count)
 
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = language.displayName
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = language.displayName
-            cell.textLabel?.textColor = PRTheme.textPrimary
+        let language = Tile(symbol: "globe", color: Palette.blue,
+                            title: "SETTINGS_LANGUAGE_SECTION".localized,
+                            value: PRLocalizationManager.currentLanguage.displayName,
+                            action: { [weak self] in self?.showLanguagePicker() })
+        let autoUpdateTile = Tile(symbol: "arrow.clockwise.circle.fill", color: PRTheme.teal,
+                                  title: "SETTINGS_AUTO_UPDATE".localized,
+                                  value: autoUpdateText,
+                                  highlightValue: autoUpdate,
+                                  toggle: autoUpdate,
+                                  action: { [weak self] in self?.handleAutoUpdateToggle() })
+
+        let clearCache = Tile(symbol: "externaldrive.fill", color: Palette.lavender,
+                              title: "SETTINGS_CLEAR_CACHE".localized,
+                              value: cacheText,
+                              action: { [weak self] in self?.handleClearCacheTapped() })
+        let resetSources = Tile(symbol: "tray.2.fill", color: PRTheme.brass,
+                                title: "SETTINGS_RESET_REPOSITORIES".localized,
+                                value: sourcesText,
+                                action: { [weak self] in self?.handleResetRepositoriesTapped() })
+
+        let respring = Tile(symbol: "arrow.counterclockwise.circle.fill", color: Palette.coral,
+                            title: "SETTINGS_RESPRING".localized,
+                            value: "SETTINGS_RESPRING_HINT".localized,
+                            action: { [weak self] in self?.confirmRespring() })
+        let iconCache = Tile(symbol: "square.grid.3x3.fill", color: Palette.olive,
+                             title: "SETTINGS_REBUILD_ICON_CACHE".localized,
+                             value: "uicache -a",
+                             action: { [weak self] in self?.confirmRebuildIconCache() })
+
+        let about = Tile(symbol: "info.circle.fill", color: Palette.blue,
+                         title: "SETTINGS_ABOUT".localized,
+                         action: { [weak self] in self?.openAbout() })
+        let log = Tile(symbol: "doc.text.magnifyingglass", color: Palette.lavender,
+                       title: "SETTINGS_DIAGNOSTIC_LOG".localized,
+                       action: { [weak self] in self?.openLog() })
+
+        var result: [TileSection] = []
+        result.append(TileSection(title: "SETTINGS_GENERAL_SECTION".localized, tiles: [language, autoUpdateTile]))
+        result.append(TileSection(title: "SETTINGS_STORAGE_SECTION".localized, tiles: [clearCache, resetSources]))
+        result.append(TileSection(title: "SETTINGS_SYSTEM_SECTION".localized, tiles: [respring, iconCache]))
+        result.append(TileSection(title: "SETTINGS_ABOUT_SECTION".localized, tiles: [about, log]))
+        return result
+    }
+
+    private func openAbout() {
+        navigationController?.pushViewController(PRAboutViewController(), animated: true)
+    }
+
+    private func openLog() {
+        navigationController?.pushViewController(PRLogViewController(), animated: true)
+    }
+
+    // MARK: - UICollectionViewDataSource
+
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        sections = makeSections()
+        return sections.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        sections[section].tiles.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PRSettingTileCell.reuseIdentifier, for: indexPath) as? PRSettingTileCell else {
+            return UICollectionViewCell()
         }
-
-        cell.accessoryType = isSelected ? .checkmark : .none
-        cell.tintColor = PRTheme.brass
-
+        let tile = sections[indexPath.section].tiles[indexPath.item]
+        cell.configure(symbol: tile.symbol, color: tile.color, title: tile.title,
+                       value: tile.value, highlightValue: tile.highlightValue, toggle: tile.toggle)
         return cell
     }
 
-    private func storageCell(for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "StorageCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "StorageCell")
-        cell.backgroundColor = .clear
-
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-
-        let sizeText = byteFormatter.string(fromByteCount: PRFileManager.shared.cacheSize())
-
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = "SETTINGS_CLEAR_CACHE".localized
-            content.secondaryText = sizeText
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-            content.secondaryTextProperties.color = PRTheme.textSecondary
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = "SETTINGS_CLEAR_CACHE".localized
-            cell.textLabel?.textColor = PRTheme.textPrimary
-            cell.detailTextLabel?.text = sizeText
-            cell.detailTextLabel?.textColor = PRTheme.textSecondary
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard let header = collectionView.dequeueReusableSupplementaryView(
+            ofKind: kind, withReuseIdentifier: PRSectionHeaderView.reuseIdentifier, for: indexPath
+        ) as? PRSectionHeaderView else {
+            return UICollectionReusableView()
         }
-
-        return cell
+        header.leadingInset = PRGridLayout.horizontalInset
+        header.configure(title: sections[indexPath.section].title)
+        return header
     }
 
-    private func resetRepositoriesCell(for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ResetRepositoriesCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "ResetRepositoriesCell")
-        cell.backgroundColor = .clear
+    // MARK: - UICollectionViewDelegate
 
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-
-        let count = PRRepositoryManager.shared.repositories.count
-        let countText = String(format: "SETTINGS_REPOSITORIES_COUNT".localized, count)
-
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = "SETTINGS_RESET_REPOSITORIES".localized
-            content.secondaryText = countText
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-            content.secondaryTextProperties.color = PRTheme.textSecondary
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = "SETTINGS_RESET_REPOSITORIES".localized
-            cell.textLabel?.textColor = PRTheme.textPrimary
-            cell.detailTextLabel?.text = countText
-            cell.detailTextLabel?.textColor = PRTheme.textSecondary
-        }
-
-        return cell
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        sections[indexPath.section].tiles[indexPath.item].action()
     }
 
-    private func autoUpdateCell(for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "AutoUpdateCell") ?? UITableViewCell(style: .value1, reuseIdentifier: "AutoUpdateCell")
-        cell.backgroundColor = .clear
+    // MARK: - Действия
 
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-
-        let isOn = PRAppSettings.autoUpdateOnLaunch
-        let stateText = isOn ? "SETTINGS_STATE_ON".localized : "SETTINGS_STATE_OFF".localized
-
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = "SETTINGS_AUTO_UPDATE".localized
-            content.secondaryText = stateText
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-            content.secondaryTextProperties.color = isOn ? PRTheme.brass : PRTheme.textSecondary
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = "SETTINGS_AUTO_UPDATE".localized
-            cell.textLabel?.textColor = PRTheme.textPrimary
-            cell.detailTextLabel?.text = stateText
-            cell.detailTextLabel?.textColor = isOn ? PRTheme.brass : PRTheme.textSecondary
-        }
-
-        return cell
-    }
-
-    private func systemCell(for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SystemCell") ?? UITableViewCell(style: .default, reuseIdentifier: "SystemCell")
-        cell.backgroundColor = .clear
-        
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-        
-        let title = indexPath.row == 0 ? "SETTINGS_RESPRING".localized : "SETTINGS_REBUILD_ICON_CACHE".localized
-        
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = title
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = title
-            cell.textLabel?.textColor = PRTheme.textPrimary
-        }
-        
-        return cell
-    }
-    
-    private func aboutCell(for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "AboutCell") ?? UITableViewCell(style: .default, reuseIdentifier: "AboutCell")
-        cell.backgroundColor = .clear
-
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-
-        let title: String
-        switch indexPath.row {
-        case 0: title = "SETTINGS_ABOUT".localized
-        case 1: title = "SETTINGS_DIAGNOSTIC_LOG".localized
-        default: title = "SETTINGS_CHECK_UPDATE".localized
-        }
-
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = title
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 28, weight: .medium)
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = title
-            cell.textLabel?.textColor = PRTheme.textPrimary
-        }
-
-        return cell
-    }
-
-    // MARK: - UITableViewDelegate
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        switch Section(rawValue: indexPath.section) {
-        case .language:
-            handleLanguageSelection(at: indexPath)
-        case .general:
-            handleAutoUpdateToggle()
-        case .storage:
-            handleClearCacheTapped()
-        case .repositories:
-            handleResetRepositoriesTapped()
-        case .system:
-            handleSystemRowSelected(at: indexPath)
-        case .about:
-            handleAboutRowSelected(at: indexPath)
-        case .none:
-            break
-        }
-    }
-    
     private func handleAutoUpdateToggle() {
         PRAppSettings.autoUpdateOnLaunch.toggle()
-        tableView.reloadSections(IndexSet(integer: Section.general.rawValue), with: .automatic)
-    }
-    
-    private func handleAboutRowSelected(at indexPath: IndexPath) {
-        switch indexPath.row {
-        case 0:
-            navigationController?.pushViewController(PRAboutViewController(), animated: true)
-        case 1:
-            navigationController?.pushViewController(PRLogViewController(), animated: true)
-        default:
-            checkForAppUpdate()
-        }
+        collectionView.reloadData()
     }
     
     private func checkForAppUpdate() {
@@ -436,21 +400,13 @@ final class PRSettingsViewController: UIViewController, UITableViewDataSource, U
         )
         alert.addAction(UIAlertAction(title: "SETTINGS_RESET_REPOSITORIES_CONFIRM_BUTTON".localized, style: .destructive) { [weak self] _ in
             PRRepositoryManager.shared.resetToDefault()
-            self?.tableView.reloadSections(IndexSet(integer: Section.repositories.rawValue), with: .automatic)
+            self?.collectionView.reloadData()
         })
         alert.addAction(UIAlertAction(title: "SETTINGS_RESTART_CANCEL".localized, style: .cancel, handler: nil))
         
         present(alert, animated: true, completion: nil)
     }
 
-    private func handleSystemRowSelected(at indexPath: IndexPath) {
-        if indexPath.row == 0 {
-            confirmRespring()
-        } else {
-            confirmRebuildIconCache()
-        }
-    }
-    
     private func confirmRespring() {
         let alert = UIAlertController(
             title: "SETTINGS_RESPRING_CONFIRM_TITLE".localized,
@@ -542,8 +498,20 @@ final class PRSettingsViewController: UIViewController, UITableViewDataSource, U
         }
     }
     
-    private func handleLanguageSelection(at indexPath: IndexPath) {
-        let language = languages[indexPath.row]
+    /// Выбор языка — список языков, текущий отмечен галочкой
+    private func showLanguagePicker() {
+        let picker = UIAlertController(title: "SETTINGS_LANGUAGE_SECTION".localized, message: nil, preferredStyle: .alert)
+        for language in languages {
+            let isCurrent = language == PRLocalizationManager.currentLanguage
+            picker.addAction(UIAlertAction(title: (isCurrent ? "✓ " : "") + language.displayName, style: .default) { [weak self] _ in
+                self?.selectLanguage(language)
+            })
+        }
+        picker.addAction(UIAlertAction(title: "SETTINGS_RESTART_CANCEL".localized, style: .cancel, handler: nil))
+        present(picker, animated: true, completion: nil)
+    }
+
+    private func selectLanguage(_ language: PRLanguage) {
         guard language != PRLocalizationManager.currentLanguage else { return }
 
         let alert = UIAlertController(
@@ -574,74 +542,11 @@ final class PRSettingsViewController: UIViewController, UITableViewDataSource, U
         )
         alert.addAction(UIAlertAction(title: "SETTINGS_CLEAR_CACHE_CONFIRM_BUTTON".localized, style: .destructive) { [weak self] _ in
             PRFileManager.shared.clearCache()
-            self?.tableView.reloadSections(IndexSet(integer: Section.storage.rawValue), with: .automatic)
+            self?.collectionView.reloadData()
         })
         alert.addAction(UIAlertAction(title: "SETTINGS_RESTART_CANCEL".localized, style: .cancel, handler: nil))
 
         present(alert, animated: true, completion: nil)
     }
 
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        120
-    }
-    
-    // MARK: - Яркие заголовки секций
-    //
-    // По умолчанию UITableView рисует заголовки секций тусклым системным серым — почти
-    // не видно на тёмном фоне. Явно задаём собственный UILabel вместо стандартного текста.
-    
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let title = sectionTitle(for: section) else { return nil }
-        
-        let container = UIView()
-        
-        let label = UILabel()
-        label.text = title
-        label.textColor = PRTheme.brass
-        label.font = UIFont.systemFont(ofSize: 22, weight: .bold)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(label)
-        
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
-            label.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -20),
-            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8)
-        ])
-        
-        return container
-    }
-    
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        guard sectionTitle(for: section) != nil else { return 0 }
-        return 56
-    }
-    
-    // tvOS сам поднимает сфокусированную строку светлой карточкой — без свапа цвета текста
-    // на тёмный светлый текст на светлом фоне становится невидимым при наведении фокуса.
-    func tableView(_ tableView: UITableView, didUpdateFocusIn context: UITableViewFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        if let nextIndexPath = context.nextFocusedIndexPath,
-           let cell = tableView.cellForRow(at: nextIndexPath) {
-            coordinator.addCoordinatedAnimations({
-                self.applyTextColor(to: cell, primary: PRTheme.ink, secondary: PRTheme.ink.withAlphaComponent(0.7))
-            }, completion: nil)
-        }
-        
-        if let previousIndexPath = context.previouslyFocusedIndexPath {
-            // Перерисовываем строку заново через cellForRowAt — так восстанавливается ТОЧНАЯ
-            // исходная раскраска (например, латунный/серый цвет статуса "Включено"/"Выключено"),
-            // а не единый жёстко заданный "цвет вне фокуса" на все строки без разбора.
-            tableView.reloadRows(at: [previousIndexPath], with: .none)
-        }
-    }
-    
-    private func applyTextColor(to cell: UITableViewCell, primary: UIColor, secondary: UIColor) {
-        if #available(tvOS 14.0, *), var content = cell.contentConfiguration as? UIListContentConfiguration {
-            content.textProperties.color = primary
-            content.secondaryTextProperties.color = secondary
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.textColor = primary
-            cell.detailTextLabel?.textColor = secondary
-        }
-    }
 }

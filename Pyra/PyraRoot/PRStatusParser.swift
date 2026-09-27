@@ -22,7 +22,7 @@ public final class PRStatusParser {
         let path = statusFilePath
 
         guard let content = try? String(contentsOfFile: path, encoding: .utf8) else {
-            print("Pyra: " + String(format: "LOG_STPRUS_FILE_ERROR".localized, path))
+            print("Pyra: " + String(format: "LOG_STATUS_FILE_ERROR".localized, path))
             return getMockPackages() // Если запускаем на симуляторе Mac — отдаем заглушки
         }
 
@@ -68,7 +68,8 @@ public final class PRStatusParser {
             let description = formattedDescription(fields["description"] ?? "")
             let section = fields["section"] ?? ""
 
-            let package = PRInstalledPackage(id: id, name: name, version: version, description: description, section: section)
+            let package = PRInstalledPackage(id: id, name: name, version: version, description: description, section: section,
+                                             installedSizeKB: fields["installed-size"].flatMap { Int64($0) })
             installedPackages.append(package)
         }
 

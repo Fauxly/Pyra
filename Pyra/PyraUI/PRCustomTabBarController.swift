@@ -22,7 +22,21 @@ public final class PRCustomTabBarController: UIViewController {
     private let contentContainer = UIView()
 
     private var tabs: [Tab] = []
-    private var tabButtons: [PRTabBarButton] = []
+    private var tabButtons: [PRTabItemButton] = []
+
+    // Полный каталог — нужен, чтобы открыть пакет по ссылке pyra://package/<id>
+    // (с верхней полки домашнего экрана). Если ссылка пришла раньше каталога — ждём его.
+    private var allPackages: [PRPackage] = []
+    private var pendingPackageID: String?
+    private var isCatalogLoading = false
+
+    // Первая вкладка крепится либо к кнопке "Назад", либо (когда та скрыта) прямо к краю
+    // бара — иначе невидимая кнопка оставляла бы пустую дыру слева и бар выглядел кривым
+    private var firstTabAfterBackConstraint: NSLayoutConstraint?
+    private var firstTabAtEdgeConstraint: NSLayoutConstraint?
+
+    /// Индекс вкладки "Обновления" — на её кнопке висит бейдж с числом доступных апдейтов
+    private let updatesTabIndex = 5
 
     private var selectedIndex: Int = 0 {
         didSet { updateSelectedTab() }
@@ -34,6 +48,7 @@ public final class PRCustomTabBarController: UIViewController {
     private weak var searchVC: PRSearchViewController?
     private weak var installedVC: PRInstalledViewController?
     private weak var updatesVC: PRUpdatesViewController?
+    private weak var repositoriesVC: PRRepositoriesViewController?
 
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -75,6 +90,14 @@ public final class PRCustomTabBarController: UIViewController {
         self.searchVC = searchVC
         self.installedVC = installedVC
         self.updatesVC = updatesVC
+        self.repositoriesVC = repoVC
+
+        // Бейдж на вкладке "Обновления": экран сам пересчитывает список при каждом новом
+        // каталоге и при заходе на вкладку — просто зеркалим это число на кнопку бара
+        updatesVC.onUpdatesCountChange = { [weak self] count in
+            guard let self, self.updatesTabIndex < self.tabButtons.count else { return }
+            self.tabButtons[self.updatesTabIndex].badgeCount = count
+        }
 
         // Явная аннотация типа обязательна: без неё компилятор не может вывести тип массива
         // из 6 разных подклассов UIViewController одним выражением с .map (Swift type checker
@@ -101,10 +124,14 @@ public final class PRCustomTabBarController: UIViewController {
     // MARK: - Верхняя панель (свой таб-бар + кнопка "Назад" в одном ряду)
 
     private func setupTopBar() {
-        // Плавающая "таблетка" с отступами по краям и мягкой тенью — вместо плоской
-        // полосы на всю ширину, это привычный премиальный вид панелей на tvOS.
-        topBar.backgroundColor = PRTheme.surface
-        topBar.layer.cornerRadius = 34
+        // Стеклянная полоса (вариант C): иконка над подписью у каждой вкладки, активная
+        // подсвечена латунью на светлой подложке. Скругление меньше, чем у "таблетки" —
+        // бар стал выше из-за двухстрочных кнопок, полная капсула смотрелась бы как пузырь.
+        topBar.backgroundColor = PRTheme.surface.withAlphaComponent(0.96)
+        topBar.layer.cornerRadius = 30
+        topBar.layer.cornerCurve = .continuous
+        topBar.layer.borderWidth = 1
+        topBar.layer.borderColor = UIColor.white.withAlphaComponent(0.08).cgColor
         topBar.layer.shadowColor = UIColor.black.cgColor
         topBar.layer.shadowOpacity = 0.35
         topBar.layer.shadowRadius = 20
@@ -113,9 +140,9 @@ public final class PRCustomTabBarController: UIViewController {
         view.addSubview(topBar)
 
         NSLayoutConstraint.activate([
-            topBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            topBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             topBar.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            topBar.heightAnchor.constraint(equalToConstant: 68)
+            topBar.heightAnchor.constraint(equalToConstant: 104)
         ])
 
         // Кнопка "Назад" — первая слева в том же ряду, что и вкладки. Видна только когда
@@ -129,40 +156,44 @@ public final class PRCustomTabBarController: UIViewController {
         topBar.addSubview(backButton)
 
         NSLayoutConstraint.activate([
-            backButton.leadingAnchor.constraint(equalTo: topBar.leadingAnchor, constant: 60),
+            backButton.leadingAnchor.constraint(equalTo: topBar.leadingAnchor, constant: 24),
             backButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
             backButton.heightAnchor.constraint(equalToConstant: 56)
         ])
 
         var previousTrailingAnchor = backButton.trailingAnchor
-        var previousGap: CGFloat = 24
+        let previousGap: CGFloat = 6
 
         for (index, tab) in tabs.enumerated() {
-            let button = PRTabBarButton()
-            button.setImage(UIImage(systemName: tab.icon), for: .normal)
-            button.setTitle(" \(tab.title)", for: .normal)
+            let button = PRTabItemButton(title: tab.title, systemImage: tab.icon)
             button.tag = index
             // addTarget не нужен — вкладки переключаются автоматически при наведении
             // фокуса (didUpdateFocus), как системный UITabBarController, без нажатия Select.
             button.translatesAutoresizingMaskIntoConstraints = false
             topBar.addSubview(button)
 
+            if index == 0 {
+                firstTabAfterBackConstraint = button.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 24)
+                firstTabAtEdgeConstraint = button.leadingAnchor.constraint(equalTo: topBar.leadingAnchor, constant: 16)
+                firstTabAtEdgeConstraint?.isActive = true
+            } else {
+                button.leadingAnchor.constraint(equalTo: previousTrailingAnchor, constant: previousGap).isActive = true
+            }
+
             NSLayoutConstraint.activate([
-                button.leadingAnchor.constraint(equalTo: previousTrailingAnchor, constant: previousGap),
-                button.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
-                button.heightAnchor.constraint(equalToConstant: 56)
+                button.topAnchor.constraint(equalTo: topBar.topAnchor, constant: 8),
+                button.bottomAnchor.constraint(equalTo: topBar.bottomAnchor, constant: -8)
             ])
 
             tabButtons.append(button)
             previousTrailingAnchor = button.trailingAnchor
-            previousGap = 8
         }
 
         // Правый край бара определяется последней кнопкой — иначе ширина плавающей
         // таблетки (trailingAnchor через lessThanOrEqualTo) осталась бы неопределённой
         if let lastButton = tabButtons.last {
             NSLayoutConstraint.activate([
-                topBar.trailingAnchor.constraint(equalTo: lastButton.trailingAnchor, constant: 40)
+                topBar.trailingAnchor.constraint(equalTo: lastButton.trailingAnchor, constant: 16)
             ])
         }
     }
@@ -236,21 +267,76 @@ public final class PRCustomTabBarController: UIViewController {
     }
 
     private func updateBackButtonVisibility() {
-        backButton.isHidden = tabs[selectedIndex].navController.viewControllers.count <= 1
+        let hidden = tabs[selectedIndex].navController.viewControllers.count <= 1
+        guard hidden != backButton.isHidden || firstTabAtEdgeConstraint?.isActive != hidden else { return }
+
+        backButton.isHidden = hidden
+        // Сначала выключаем, потом включаем — чтобы в моменте не было двух активных
+        // конфликтующих констрейнтов на leading первой вкладки
+        if hidden {
+            firstTabAfterBackConstraint?.isActive = false
+            firstTabAtEdgeConstraint?.isActive = true
+        } else {
+            firstTabAtEdgeConstraint?.isActive = false
+            firstTabAfterBackConstraint?.isActive = true
+        }
+        UIView.animate(withDuration: 0.25) {
+            self.view.layoutIfNeeded()
+        }
     }
 
     // MARK: - Каталог (перенесено из старого PRMainTabBarController)
 
     private func loadCatalog() {
+        isCatalogLoading = true
         Task {
             let packages = await PRRepositoryManager.shared.loadAllPackages()
+            // Свежий снимок dpkg status к новому каталогу — значки "установлен/обновление"
+            // на плитках и бейдж вкладки считаются от него
+            PRInstalledState.shared.refresh()
             await MainActor.run {
+                self.isCatalogLoading = false
+                self.allPackages = packages
                 self.categoriesVC?.allPackages = packages
                 self.searchVC?.allPackages = packages
                 self.installedVC?.allPackages = packages
                 self.updatesVC?.allPackages = packages
+                self.repositoriesVC?.allPackages = packages
+
+                if let pending = self.pendingPackageID {
+                    self.openPackage(withID: pending)
+                }
             }
         }
+    }
+
+    // MARK: - Диплинки
+
+    /// Открыть карточку пакета на вкладке "Главная" — вызывается из SceneDelegate
+    /// по ссылке pyra://package/<id>
+    func openPackage(withID packageID: String) {
+        let matches = allPackages.filter { $0.packageID.lowercased() == packageID.lowercased() }
+        // Если пакет лежит в нескольких репозиториях/версиях — берём самую новую
+        let package = matches.reduce(nil as PRPackage?) { best, candidate in
+            guard let best else { return candidate }
+            return PRDependencyChecker.compareVersions(candidate.version, ">>", best.version) ? candidate : best
+        }
+
+        guard let package else {
+            pendingPackageID = packageID
+            // Каталог может быть не загружен вовсе (автозагрузка выключена в настройках)
+            if allPackages.isEmpty && !isCatalogLoading {
+                loadCatalog()
+            }
+            return
+        }
+
+        pendingPackageID = nil
+        selectedIndex = 0
+        let nav = tabs[0].navController
+        nav.popToRootViewController(animated: false)
+        nav.pushViewController(PRPackageDetailsViewController(package: package), animated: false)
+        updateBackButtonVisibility()
     }
 
     @objc private func repositoriesDidChange() {

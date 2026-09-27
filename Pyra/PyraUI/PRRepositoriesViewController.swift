@@ -7,23 +7,40 @@
 
 import UIKit
 
-public final class PRRepositoriesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    
-    private let tableView = UITableView(frame: .zero, style: .plain)
+/// Источники — сетка карточек: первая "Добавить источник", дальше репозитории с иконкой,
+/// адресом, числом пакетов и статусом загрузки. Удаление — долгое нажатие на карточку.
+public final class PRRepositoriesViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
+
+    private var collectionView: UICollectionView!
+    private let titleLabel = UILabel()
+    private let refreshButton = PRActionButton()
     private let progressTrack = UIView()
     private let progressFill = UIView()
     private var progressAnimationRunning = false
-    
+
     // Единственный источник правды — PRRepositoryManager. Больше никакого локального
     // дублирующего массива: то, что добавляется здесь, реально используется при загрузке пакетов.
     private var repositories: [PRRepository] {
         PRRepositoryManager.shared.repositories
     }
-    
+
+    /// Общий каталог — приходит из PRCustomTabBarController; по нему считаем пакеты в каждом источнике
+    var allPackages: [PRPackage] = [] {
+        didSet {
+            hasLoadedCatalog = true
+            packageCounts = Dictionary(grouping: allPackages.compactMap { $0.sourceRepository?.id }) { $0 }
+                .mapValues { $0.count }
+            collectionView?.reloadData()
+        }
+    }
+    private var packageCounts: [UUID: Int] = [:]
+    private var hasLoadedCatalog = false
+
     // Пока идёт сетевая загрузка каталога — показываем бегущую латунную полосу сверху
     private var isRefreshing = false {
         didSet {
             progressTrack.isHidden = !isRefreshing
+            refreshButton.isEnabled = !isRefreshing
             if isRefreshing {
                 startProgressAnimation()
             } else {
@@ -31,94 +48,141 @@ public final class PRRepositoriesViewController: UIViewController, UITableViewDa
             }
         }
     }
-    
-    // Какие конкретно репозитории сейчас грузятся — для мини-полосы на отдельной строке
+
+    // Какие конкретно репозитории сейчас грузятся — для значка статуса на карточке
     private var loadingRepositoryIDs: Set<UUID> = []
-    
+
     // Когда каждый репозиторий начал грузиться — чтобы гарантировать минимальное время показа
-    // мини-полосы. Без этого быстрые репозитории (ответ за доли секунды) мелькали бы короче,
-    // чем человек успевает заметить — и казалось бы, что работает только общая полоса сверху.
+    // статуса "грузится". Без этого быстрые репозитории мелькали бы короче, чем человек успевает заметить.
     private var loadingStartTimes: [UUID: Date] = [:]
     private let minimumVisibleDuration: TimeInterval = 0.5
-    
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-    
+
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = PRTheme.ink
-        
-        setupTableHeader()
-        setupTableView()
+
+        setupHeader()
+        setupCollectionView()
         setupProgressBar()
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(refreshDidStart),
-            name: PRRepositoryManager.didStartRefreshingNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(refreshDidFinish),
-            name: PRRepositoryManager.didFinishRefreshingNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(repositoryRefreshDidStart(_:)),
-            name: PRRepositoryManager.repositoryDidStartRefreshingNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(repositoryRefreshDidFinish(_:)),
-            name: PRRepositoryManager.repositoryDidFinishRefreshingNotification,
-            object: nil
-        )
+
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshDidStart),
+                                               name: PRRepositoryManager.didStartRefreshingNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshDidFinish),
+                                               name: PRRepositoryManager.didFinishRefreshingNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(repositoryRefreshDidStart(_:)),
+                                               name: PRRepositoryManager.repositoryDidStartRefreshingNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(repositoryRefreshDidFinish(_:)),
+                                               name: PRRepositoryManager.repositoryDidFinishRefreshingNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(repositoriesDidChange),
+                                               name: PRRepositoryManager.repositoriesDidChangeNotification, object: nil)
     }
-    
+
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateTitle()
+    }
+
+    // MARK: - Вёрстка
+
+    private func setupHeader() {
+        titleLabel.font = UIFont.systemFont(ofSize: 40, weight: .heavy)
+        titleLabel.textColor = PRTheme.textPrimary
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleLabel)
+
+        refreshButton.style = .secondary
+        refreshButton.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
+        refreshButton.setTitle("SOURCES_REFRESH_ALL".localized, for: .normal)
+        refreshButton.accessibilityLabel = "SOURCES_REFRESH_A11Y".localized
+        refreshButton.addTarget(self, action: #selector(refreshTapped), for: .primaryActionTriggered)
+        refreshButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(refreshButton)
+
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: PRGridLayout.horizontalInset),
+
+            refreshButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            refreshButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -PRGridLayout.horizontalInset),
+            refreshButton.heightAnchor.constraint(equalToConstant: 66)
+        ])
+        updateTitle()
+    }
+
+    private func updateTitle() {
+        titleLabel.text = String(format: "SOURCES_TITLE".localized, repositories.count)
+    }
+
+    private func setupCollectionView() {
+        let layout = UICollectionViewCompositionalLayout { _, _ in
+            PRGridLayout.section(columns: 3, itemHeight: 170)
+        }
+        collectionView = PRGridLayout.makeCollectionView(in: view, layout: layout)
+        collectionView.register(PRSourceCell.self, forCellWithReuseIdentifier: PRSourceCell.reuseIdentifier)
+        collectionView.register(PRAddSourceCell.self, forCellWithReuseIdentifier: PRAddSourceCell.reuseIdentifier)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+    }
+
+    // MARK: - Уведомления менеджера
+
     @objc private func refreshDidStart() {
         isRefreshing = true
     }
-    
+
     @objc private func refreshDidFinish() {
         isRefreshing = false
     }
-    
+
+    @objc private func repositoriesDidChange() {
+        updateTitle()
+        collectionView.reloadData()
+    }
+
     @objc private func repositoryRefreshDidStart(_ notification: Notification) {
         guard let id = notification.userInfo?["repositoryID"] as? UUID else { return }
         loadingRepositoryIDs.insert(id)
         loadingStartTimes[id] = Date()
-        reloadRow(for: id)
+        reloadItem(for: id)
     }
-    
+
     @objc private func repositoryRefreshDidFinish(_ notification: Notification) {
         guard let id = notification.userInfo?["repositoryID"] as? UUID else { return }
-        
+
         let elapsed = loadingStartTimes[id].map { Date().timeIntervalSince($0) } ?? minimumVisibleDuration
         let remainingDelay = max(0, minimumVisibleDuration - elapsed)
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + remainingDelay) { [weak self] in
             guard let self else { return }
             self.loadingRepositoryIDs.remove(id)
             self.loadingStartTimes.removeValue(forKey: id)
-            self.reloadRow(for: id)
+            self.reloadItem(for: id)
         }
     }
-    
-    private func reloadRow(for repositoryID: UUID) {
+
+    private func reloadItem(for repositoryID: UUID) {
         guard let index = repositories.firstIndex(where: { $0.id == repositoryID }) else { return }
-        // reconfigureRows не сбрасывает фокус на строке (в отличие от reloadRows) — важно,
-        // раз обновление может прилететь, пока пользователь уже листает список пультом
-        if #available(tvOS 15.0, *) {
-            tableView.reconfigureRows(at: [IndexPath(row: index, section: 0)])
-        } else {
-            tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
-        }
+        // reconfigureItems не сбрасывает фокус на карточке (в отличие от reloadItems)
+        collectionView.reconfigureItems(at: [IndexPath(item: index + 1, section: 0)])
     }
-    
+
+    private func status(for repository: PRRepository) -> PRSourceCell.Status {
+        if loadingRepositoryIDs.contains(repository.id) { return .loading }
+        guard hasLoadedCatalog else { return .unknown }
+        let count = packageCounts[repository.id] ?? 0
+        return count > 0 ? .ready(packageCount: count) : .empty
+    }
+
     // MARK: - Прогресс-бар обновления
     
     private func setupProgressBar() {
@@ -181,67 +245,10 @@ public final class PRRepositoriesViewController: UIViewController, UITableViewDa
         progressFill.layer.removeAllAnimations()
     }
     
-    private func setupTableHeader() {
-        // Верхняя панель с двумя круглыми иконками: "+" (добавить) и обновление
-        let headerView = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 150))
-        
-        let addButton = makeIconButton(systemName: "plus", accessibilityLabel: "SOURCES_ADD_A11Y".localized)
-        addButton.frame = CGRect(x: 100, y: 40, width: 70, height: 70)
-        addButton.addTarget(self, action: #selector(addRepositoryTapped), for: .primaryActionTriggered)
-        
-        let refreshButton = makeIconButton(systemName: "arrow.clockwise", accessibilityLabel: "SOURCES_REFRESH_A11Y".localized)
-        refreshButton.frame = CGRect(x: 190, y: 40, width: 70, height: 70)
-        refreshButton.addTarget(self, action: #selector(refreshTapped), for: .primaryActionTriggered)
-        
-        headerView.addSubview(addButton)
-        headerView.addSubview(refreshButton)
-        tableView.tableHeaderView = headerView
-    }
-    
-    private func makeIconButton(systemName: String, accessibilityLabel: String) -> UIButton {
-        let button = UIButton(type: .system)
-        button.accessibilityLabel = accessibilityLabel
-        button.backgroundColor = .clear
-        button.layer.cornerRadius = 12
-        button.layer.borderWidth = 2
-        button.layer.borderColor = PRTheme.brass.cgColor
-        
-        // Явный UIImageView вместо button.setImage(...) — на tvOS встроенный imageView
-        // кнопки без текста рендерился ненадёжно (иконка не появлялась вообще).
-        let config = UIImage.SymbolConfiguration(pointSize: 28, weight: .semibold)
-        let iconView = UIImageView(image: UIImage(systemName: systemName, withConfiguration: config))
-        iconView.tintColor = PRTheme.brass
-        iconView.contentMode = .scaleAspectFit
-        iconView.isUserInteractionEnabled = false
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        button.addSubview(iconView)
-        
-        NSLayoutConstraint.activate([
-            iconView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 32),
-            iconView.heightAnchor.constraint(equalToConstant: 32)
-        ])
-        
-        return button
-    }
-    
     @objc private func refreshTapped() {
         PRRepositoryManager.shared.requestRefresh()
     }
-    
-    private func setupTableView() {
-        // Таблица под кнопку
-        tableView.frame = view.bounds
-        tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        tableView.backgroundColor = .clear
-        tableView.dataSource = self
-        tableView.delegate = self
-        
-        tableView.register(PRRepositoryCell.self, forCellReuseIdentifier: PRRepositoryCell.reuseIdentifier)
-        view.addSubview(tableView)
-    }
-    
+
     @objc private func addRepositoryTapped() {
         // Своя клавиатура на экране вместо системного UIAlertController.addTextField() —
         // системная клавиатура зависает на этом устройстве вне зависимости от entitlements,
@@ -264,7 +271,7 @@ public final class PRRepositoriesViewController: UIViewController, UITableViewDa
             let added = PRRepositoryManager.shared.addRepository(repository)
             
             if added {
-                self?.tableView.reloadData()
+                self?.collectionView.reloadData()
             } else {
                 self?.showSimpleAlert(title: "SOURCES_ALREADY_ADDED_TITLE".localized, message: "SOURCES_ALREADY_ADDED_MESSAGE".localized)
             }
@@ -279,127 +286,71 @@ public final class PRRepositoriesViewController: UIViewController, UITableViewDa
         present(alert, animated: true, completion: nil)
     }
     
-    // MARK: - UITableViewDataSource
-    
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return repositories.count
+    // MARK: - UICollectionViewDataSource
+
+    // Элемент 0 — карточка "Добавить", дальше источники (индекс источника = item - 1)
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        repositories.count + 1
     }
-    
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: PRRepositoryCell.reuseIdentifier, for: indexPath) as? PRRepositoryCell ?? PRRepositoryCell(style: .subtitle, reuseIdentifier: PRRepositoryCell.reuseIdentifier)
-        cell.backgroundColor = .clear
-        
-        let repository = repositories[indexPath.row]
-        cell.setLoading(loadingRepositoryIDs.contains(repository.id))
-        
-        let focusBackground = UIView()
-        focusBackground.backgroundColor = PRTheme.surfaceFocused
-        focusBackground.layer.cornerRadius = 8
-        cell.selectedBackgroundView = focusBackground
-        
-        if #available(tvOS 14.0, *) {
-            var content = cell.defaultContentConfiguration()
-            content.text = repository.name
-            content.secondaryText = repository.baseURL.host?.contains("procurs.us") == true ? "SOURCES_OFFICIAL".localized : repository.baseURL.absoluteString
-            content.textProperties.color = PRTheme.textPrimary
-            content.textProperties.font = UIFont.systemFont(ofSize: 26, weight: .medium)
-            content.textProperties.numberOfLines = 1
-            content.textProperties.lineBreakMode = .byTruncatingTail
-            content.secondaryTextProperties.color = PRTheme.textSecondary
-            content.secondaryTextProperties.numberOfLines = 1
-            // Middle-усечение для URL — сохраняет и схему (https://), и конец домена видимыми,
-            // это полезнее, чем byTruncatingTail, который бы просто съел конец адреса.
-            content.secondaryTextProperties.lineBreakMode = .byTruncatingMiddle
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.text = repository.name
-            cell.textLabel?.textColor = PRTheme.textPrimary
-            cell.textLabel?.lineBreakMode = .byTruncatingTail
-            cell.detailTextLabel?.lineBreakMode = .byTruncatingMiddle
+
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.item == 0 {
+            return collectionView.dequeueReusableCell(withReuseIdentifier: PRAddSourceCell.reuseIdentifier, for: indexPath)
         }
-        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PRSourceCell.reuseIdentifier, for: indexPath) as? PRSourceCell else {
+            return UICollectionViewCell()
+        }
+        let repository = repositories[indexPath.item - 1]
+        cell.configure(with: repository, status: status(for: repository))
         return cell
     }
-    
-    // MARK: - UITableViewDelegate
-    
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        let repository = repositories[indexPath.row]
-        
-        // Переходим внутрь конкретного репозитория — переиспользуем PRDashboardViewController
-        // как и для категорий. Помечаем "кастомный список" СРАЗУ пустым массивом — иначе
-        // viewDidLoad успевает сработать раньше, чем придёт ответ сети, решит что кастомного
-        // списка не будет, и сам вызовет loadData() (общий смёрженный каталог, где Procursus
-        // почти всегда доминирует по числу пакетов) — из-за этого всегда показывался Procursus
-        // вне зависимости от того, по какому репозиторию реально тапнули.
-        let repoDetailsVC = PRDashboardViewController()
-        repoDetailsVC.title = repository.name
-        repoDetailsVC.setCustomPackages([])
-        navigationController?.pushViewController(repoDetailsVC, animated: true)
-        
+
+    // MARK: - UICollectionViewDelegate
+
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard indexPath.item > 0 else {
+            addRepositoryTapped()
+            return
+        }
+        let repository = repositories[indexPath.item - 1]
+
+        // Экран раздела: шапка с иконкой репозитория + сетка пакетов по категориям.
+        // Пакеты тянем именно из этого репозитория напрямую, а не из смёрженного каталога —
+        // иначе не отличить, что откуда пришло. Пока грузится — скелетоны.
+        let repositoryVC = PRPackageListViewController(mode: .repository(repository))
+        repositoryVC.showLoading()
+        navigationController?.pushViewController(repositoryVC, animated: true)
+
         Task {
-            // Намеренно смотрим именно в этот репозиторий напрямую, а не в уже смёрженный
-            // общий каталог всех репозиториев — иначе не отличить, что откуда пришло.
             do {
                 let packages = try await PRNetworkManager.shared.fetchPackages(from: repository)
                 await MainActor.run {
-                    repoDetailsVC.setCustomPackages(packages)
+                    repositoryVC.setPackages(packages)
                 }
             } catch {
                 print("Pyra: Не удалось загрузить \(repository.name) (\(repository.packagesURL.absoluteString)): \(error.localizedDescription)")
                 await MainActor.run {
-                    repoDetailsVC.setCustomPackages([])
+                    repositoryVC.setPackages([])
                 }
             }
         }
     }
-    
-    // Долгое нажатие (удержание тач-панели пульта) — стандартный tvOS-способ показать
-    // контекстное меню действий, не занимая обычный тап под второстепенное действие.
-    public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        let repository = repositories[indexPath.row]
-        
+
+    // Долгое нажатие (удержание тач-панели пульта) — контекстное меню с удалением источника.
+    // UIContextMenuConfiguration на tvOS есть только с 17.0 — на более старых системах
+    // метод просто не вызывается, а сборка с меньшим минимальным tvOS не ломается.
+    @available(tvOS 17.0, *)
+    public func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
+        guard let indexPath = indexPaths.first, indexPath.item > 0 else { return nil }
+        let repository = repositories[indexPath.item - 1]
+
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
             let deleteAction = UIAction(title: "SOURCES_DELETE_ACTION".localized, image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
                 PRRepositoryManager.shared.removeRepository(repository)
-                self?.tableView.reloadData()
+                self?.updateTitle()
+                self?.collectionView.reloadData()
             }
             return UIMenu(title: repository.name, children: [deleteAction])
         }
-    }
-    
-    // tvOS для .grouped таблиц сам поднимает сфокусированную строку в виде светлой карточки
-    // и наш selectedBackgroundView эту подложку не перекрывает — поэтому вместо борьбы с фоном
-    // переключаем цвет текста: тёмный на фокусе (светлая карточка), светлый в состоянии покоя.
-    public func tableView(_ tableView: UITableView, didUpdateFocusIn context: UITableViewFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        if let nextIndexPath = context.nextFocusedIndexPath,
-           let cell = tableView.cellForRow(at: nextIndexPath) {
-            coordinator.addCoordinatedAnimations({
-                self.applyTextColor(to: cell, primary: PRTheme.ink, secondary: PRTheme.ink.withAlphaComponent(0.7))
-            }, completion: nil)
-        }
-        
-        if let previousIndexPath = context.previouslyFocusedIndexPath,
-           let cell = tableView.cellForRow(at: previousIndexPath) {
-            coordinator.addCoordinatedAnimations({
-                self.applyTextColor(to: cell, primary: PRTheme.textPrimary, secondary: PRTheme.textSecondary)
-            }, completion: nil)
-        }
-    }
-    
-    private func applyTextColor(to cell: UITableViewCell, primary: UIColor, secondary: UIColor) {
-        if #available(tvOS 14.0, *), var content = cell.contentConfiguration as? UIListContentConfiguration {
-            content.textProperties.color = primary
-            content.secondaryTextProperties.color = secondary
-            cell.contentConfiguration = content
-        } else {
-            cell.textLabel?.textColor = primary
-        }
-    }
-    
-    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 120
     }
 }

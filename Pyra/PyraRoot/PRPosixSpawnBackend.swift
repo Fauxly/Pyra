@@ -61,7 +61,7 @@ public final class PRPosixSpawnBackend: PRSpawnBackend {
             throw PRSpawnError.binaryNotFound(path: binaryPath)
         }
 
-        guard let handle = dlopen("/usr/lib/libSystem.dylib", RTLD_NOW) else {
+        guard let handle = dlopen(nil, RTLD_NOW) else {
             throw PRSpawnError.unknown(code: -10)
         }
         defer { dlclose(handle) }

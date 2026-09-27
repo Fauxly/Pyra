@@ -55,7 +55,7 @@ final class PRRepositoryManager {
                 baseURL: URL(string: "https://apt.procurs.us")!,
                 distribution: "2000",
                 components: ["main"],
-                architectures: ["appletvos-arm64"]
+                architectures: ["appletvos-arm64", "iphoneos-arm64"]
             ),
             // Остальные три — самодельные/плоские репозитории без стандартной структуры
             // dists/..., PRNetworkManager сам перебирает вложенный/плоский формат при загрузке.

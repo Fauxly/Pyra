@@ -11,6 +11,13 @@ final class PRPackageCell: UICollectionViewCell {
 
     private let iconView = UIImageView()
     private let nameLabel = UILabel()
+    /// Автор под названием (без почты из поля Author)
+    private let authorLabel = UILabel()
+
+    /// Значок в углу плитки: галочка — установлен, стрелка — есть обновление
+    private let statusBadge = UIImageView()
+
+    private var package: PRPackage?
 
     // Задача загрузки иконки для ТЕКУЩЕГО содержимого ячейки. Отменяется при переиспользовании,
     // чтобы результат старой загрузки не "выстрелил" в уже переиспользованную под другой пакет ячейку.
@@ -47,9 +54,32 @@ final class PRPackageCell: UICollectionViewCell {
         nameLabel.textColor = PRTheme.textPrimary
         nameLabel.font = UIFont.systemFont(ofSize: 22, weight: .semibold)
         nameLabel.textAlignment = .center
-        nameLabel.numberOfLines = 3
+        nameLabel.numberOfLines = 2
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(nameLabel)
+
+        authorLabel.textColor = PRTheme.textSecondary
+        authorLabel.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        authorLabel.textAlignment = .center
+        authorLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(authorLabel)
+
+        statusBadge.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 30, weight: .bold)
+        statusBadge.backgroundColor = PRTheme.ink
+        statusBadge.layer.cornerRadius = 20
+        statusBadge.contentMode = .center
+        statusBadge.isHidden = true
+        statusBadge.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(statusBadge)
+
+        // Установка/удаление где угодно в приложении → значки на всех видимых плитках
+        // обновляются сами, без перезагрузки коллекций
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(installedStateDidChange),
+            name: PRInstalledState.didChangeNotification,
+            object: nil
+        )
 
         NSLayoutConstraint.activate([
             iconView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15),
@@ -60,12 +90,28 @@ final class PRPackageCell: UICollectionViewCell {
             nameLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 12),
             nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 15),
             nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15),
-            nameLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -15)
+
+            authorLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
+            authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 15),
+            authorLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15),
+            authorLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -12),
+
+            statusBadge.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            statusBadge.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+            statusBadge.widthAnchor.constraint(equalToConstant: 40),
+            statusBadge.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
 
     func configure(with package: PRPackage) {
+        self.package = package
         nameLabel.text = package.name
+        var author = package.author?.trimmingCharacters(in: .whitespaces) ?? ""
+        if let bracket = author.firstIndex(of: "<") {
+            author = String(author[..<bracket]).trimmingCharacters(in: .whitespaces)
+        }
+        authorLabel.text = author
+        updateStatusBadge()
 
         // Плейсхолдер сразу, чтобы не было пустого места, пока грузится (или если иконки нет вообще)
         iconView.image = UIImage(systemName: "shippingbox")
@@ -87,6 +133,29 @@ final class PRPackageCell: UICollectionViewCell {
         }
     }
 
+    private func updateStatusBadge() {
+        guard let package else {
+            statusBadge.isHidden = true
+            return
+        }
+        switch PRInstalledState.shared.status(for: package) {
+        case .notInstalled:
+            statusBadge.isHidden = true
+        case .installed:
+            statusBadge.image = UIImage(systemName: "checkmark.circle.fill")
+            statusBadge.tintColor = PRTheme.teal
+            statusBadge.isHidden = false
+        case .updateAvailable:
+            statusBadge.image = UIImage(systemName: "arrow.down.circle.fill")
+            statusBadge.tintColor = PRTheme.brass
+            statusBadge.isHidden = false
+        }
+    }
+
+    @objc private func installedStateDidChange() {
+        updateStatusBadge()
+    }
+
     override func prepareForReuse() {
         super.prepareForReuse()
 
@@ -95,6 +164,9 @@ final class PRPackageCell: UICollectionViewCell {
 
         iconView.image = nil
         nameLabel.text = nil
+        authorLabel.text = nil
+        package = nil
+        statusBadge.isHidden = true
 
         transform = .identity
         contentView.backgroundColor = PRTheme.surface
