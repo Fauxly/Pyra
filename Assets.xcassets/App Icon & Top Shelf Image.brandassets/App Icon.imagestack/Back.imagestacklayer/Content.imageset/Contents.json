@@ -1,18 +1,18 @@
 {
-  "images" : [
+  "images": [
     {
-      "filename" : "pyra_back_400x240.png",
-      "idiom" : "tv",
-      "scale" : "1x"
+      "filename": "pyra_back_400x240.png",
+      "idiom": "tv",
+      "scale": "1x"
     },
     {
-      "filename" : "pyra_back_1280x768.png",
-      "idiom" : "tv",
-      "scale" : "2x"
+      "filename": "pyra_back_800x480.png",
+      "idiom": "tv",
+      "scale": "2x"
     }
   ],
-  "info" : {
-    "author" : "xcode",
-    "version" : 1
+  "info": {
+    "author": "xcode",
+    "version": 1
   }
 }
